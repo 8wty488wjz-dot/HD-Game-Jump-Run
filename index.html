@@ -32,6 +32,10 @@ button.big:active{transform:translateY(3px);box-shadow:0 1px 0 #7a0d0d}
 #endBottom{position:fixed;bottom:10px;left:0;right:0;text-align:center;pointer-events:none}
 .ctl{position:fixed;bottom:max(8px,env(safe-area-inset-bottom));width:74px;height:74px;border-radius:50%;background:rgba(255,255,255,.28);border:3px solid rgba(255,255,255,.75);color:#fff;font-size:34px;display:flex;align-items:center;justify-content:center;touch-action:none}
 .ctl.on{background:rgba(255,204,51,.6)}
+/* unsichtbar vergrößerte Trefferflächen */
+.ctl::after{content:'';position:absolute;inset:-20px;border-radius:24px}
+#bl::after{right:-7px}#br::after{left:-7px}
+#ctrls.split .ctl::after{inset:-38px}
 #bl{left:16px}#br{left:104px}#bj{right:18px;width:88px;height:88px;font-size:20px;font-weight:bold}
 #ctrls.hide{display:none}
 #ctrls.split #br{left:auto;right:16px}
@@ -352,10 +356,16 @@ addEventListener('keyup',e=>{
 });
 function bindBtn(id,key){
   const el=document.getElementById(id);
-  const on=e=>{e.preventDefault();initAudio();if(key==='j'&&!K.j)jPress=1;K[key]=1;el.classList.add('on')};
-  const off=e=>{e.preventDefault();K[key]=0;el.classList.remove('on')};
+  const ids=new Set();let t0=0;
+  // Finger bleibt dem Knopf zugeordnet (Pointer-Capture), auch wenn er beim Drücken leicht verrutscht.
+  // Sehr kurze Tipper auf ◀/▶ zählen mindestens 0,14 s, damit H-D sichtbar reagiert.
+  const on=e=>{e.preventDefault();initAudio();try{el.setPointerCapture(e.pointerId)}catch(_){}
+    ids.add(e.pointerId);if(key==='j'&&!K.j)jPress=1;K[key]=1;t0=performance.now();el.classList.add('on')};
+  const off=e=>{if(!ids.has(e.pointerId))return;ids.delete(e.pointerId);if(ids.size)return;
+    const rel=()=>{if(!ids.size){K[key]=0;el.classList.remove('on')}},held=performance.now()-t0;
+    if(key!=='j'&&held<140)setTimeout(rel,140-held);else rel()};
   el.addEventListener('pointerdown',on);
-  ['pointerup','pointercancel','pointerout','pointerleave'].forEach(t=>el.addEventListener(t,off));
+  ['pointerup','pointercancel','lostpointercapture'].forEach(t=>el.addEventListener(t,off));
 }
 bindBtn('bl','l');bindBtn('br','r');bindBtn('bj','j');
 addEventListener('contextmenu',e=>e.preventDefault());
