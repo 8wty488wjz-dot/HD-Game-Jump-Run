@@ -52,6 +52,9 @@ button.big:active{transform:translateY(3px);box-shadow:0 1px 0 #7a0d0d}
 #nameIn{font:inherit;font-size:18px;padding:8px 12px;border-radius:10px;border:none;width:100%;box-sizing:border-box;margin:8px 0;-webkit-user-select:text;user-select:text;touch-action:auto}
 #hsTabs{display:flex;flex-wrap:wrap;justify-content:center;gap:4px}#hsTabs .mid{font-size:13px;padding:5px 10px;margin:2px}
 #hs li.me{color:#ffcc33}
+#fbText{font:15px system-ui,sans-serif;width:100%;box-sizing:border-box;height:110px;border-radius:10px;border:none;padding:8px;margin:8px 0 0;resize:none;-webkit-user-select:text;user-select:text;touch-action:auto}
+#fbName{font:inherit;font-size:16px;padding:7px 10px;border-radius:10px;border:none;width:100%;box-sizing:border-box;margin:6px 0;-webkit-user-select:text;user-select:text;touch-action:auto}
+#fbTypes .mid{font-size:14px;padding:5px 11px}
 #hs ol{margin:0;padding-left:24px;text-align:left}
 #pauseBtn{position:fixed;top:8px;right:60px;z-index:5;font-size:20px;width:42px;height:42px;border-radius:50%;border:2px solid rgba(255,255,255,.8);background:rgba(0,0,0,.35);color:#fff;cursor:pointer;padding:0}
 #pauseBtn.hide{display:none}
@@ -96,6 +99,7 @@ button.big:active{transform:translateY(3px);box-shadow:0 1px 0 #7a0d0d}
       <label class="sw"><input type="checkbox" id="xmasSw"><span class="tr"></span>🎄 Weihnachtsmodus</label>
       <button class="mid gray" id="nameBtn">👤 Name festlegen</button>
       <button class="mid" id="hsBtn">🏆 Highscores</button>
+      <button class="mid blue" id="fbBtn">💬 Feedback</button>
     </div>
     <p class="small" id="hint">PC: ← → steuern · Leertaste / ↑ springen</p>
     <p class="ver">v1.0</p>
@@ -120,12 +124,22 @@ button.big:active{transform:translateY(3px);box-shadow:0 1px 0 #7a0d0d}
     <input id="nameIn" type="text" maxlength="16" autocomplete="nickname" placeholder="z. B. Horst">
     <div><button class="mid green" id="nameOk">Speichern</button><button class="mid gray" id="nameSkip">Später</button></div></div>
 </div>
+<div id="fbOv" class="ov hide" style="background:rgba(0,0,0,.6);z-index:9">
+  <div class="box"><h1 style="font-size:26px">💬 Feedback</h1>
+    <p class="small">Bug gefunden oder eine Idee? Schreib's hier rein, es landet direkt beim Entwickler.</p>
+    <div id="fbTypes"><button class="mid" data-ft="bug">🐞 Bug</button><button class="mid gray" data-ft="wish">💡 Wunsch</button><button class="mid gray" data-ft="praise">👍 Lob</button></div>
+    <textarea id="fbText" maxlength="500" placeholder="Was ist passiert bzw. was wünschst du dir?"></textarea>
+    <div class="small" id="fbCount" style="text-align:right">0 / 500</div>
+    <input id="fbName" type="text" maxlength="16" placeholder="Dein Name (optional)">
+    <p class="small" id="fbStatus"></p>
+    <div><button class="mid green" id="fbSend">Senden</button><button class="mid gray" id="fbClose">Abbrechen</button></div></div>
+</div>
 <div id="pause" class="ov hide" style="background:rgba(0,0,0,.5)">
   <div class="box"><h1>⏸ Pause</h1><p id="pauseInfo" class="small"></p>
     <button class="mid green" id="pResume">▶ Weiter</button><button class="mid" id="pRestart">↻ Level neu starten</button>
     <div class="grp"><p class="small">Level wechseln</p><div id="pLevels"></div></div>
     <div class="grp"><p class="small">Spiel wechseln</p><div id="pGames"></div></div>
-    <button class="mid gray" id="pMenu" style="margin-top:10px">Hauptmenü</button></div>
+    <button class="mid blue" id="pFb" style="margin-top:10px">💬 Feedback</button><button class="mid gray" id="pMenu" style="margin-top:10px">Hauptmenü</button></div>
 </div>
 <div id="hs" class="ov hide">
   <div class="box"><h1>🏆 Highscores</h1><div id="hsList"></div>
@@ -339,7 +353,7 @@ function drawLvl(){
 /* ---------- Input ---------- */
 const K={l:0,r:0,j:0};let jPress=0;
 addEventListener('keydown',e=>{
-  if(e.target&&e.target.tagName==='INPUT'){if(e.key==='Enter')$('nameOk').click();return}
+  if(e.target&&(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')){if(e.key==='Enter'&&e.target.id==='nameIn')$('nameOk').click();return}
   const k=e.key;
   if(k==='ArrowLeft'||k==='a'||k==='A')K.l=1;
   if(k==='ArrowRight'||k==='d'||k==='D')K.r=1;
@@ -348,7 +362,7 @@ addEventListener('keydown',e=>{
   if(k==='Enter'&&state!=='play'&&state!=='pause'){if(state==='intro')startGame('run',1);else restart()}
 });
 addEventListener('keyup',e=>{
-  if(e.target&&e.target.tagName==='INPUT')return;
+  if(e.target&&(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'))return;
   const k=e.key;
   if(k==='ArrowLeft'||k==='a'||k==='A')K.l=0;
   if(k==='ArrowRight'||k==='d'||k==='D')K.r=0;
@@ -397,7 +411,10 @@ $('shareBtn').onclick=()=>openShare(shareText);
 $('xmasSw').checked=XMAS;$('xmasSw').onchange=()=>{XMAS=$('xmasSw').checked;try{localStorage.setItem('hd_xmas',XMAS?'1':'0')}catch(e){}};
 $('nameBtn').onclick=()=>askName(null);$('nameOk').onclick=()=>{const v=$('nameIn').value.trim().replace(/[<>]/g,'').slice(0,16);if(!v){$('nameIn').focus();return}
   PNAME=v;try{localStorage.setItem('hd_name',v)}catch(e){}updNameBtn();closeName(true)};
-$('nameSkip').onclick=()=>closeName(false);$('hsBtn').onclick=showHS;$('hsShare').onclick=()=>openShare(hsText());
+$('nameSkip').onclick=()=>closeName(false);
+$('fbBtn').onclick=openFb;$('pFb').onclick=openFb;$('fbClose').onclick=()=>$('fbOv').classList.add('hide');$('fbSend').onclick=sendFb;
+document.querySelectorAll('#fbTypes [data-ft]').forEach(b=>b.onclick=()=>setFbType(b.dataset.ft));
+$('fbText').oninput=()=>{$('fbCount').textContent=$('fbText').value.length+' / 500'};$('hsBtn').onclick=showHS;$('hsShare').onclick=()=>openShare(hsText());
 updNameBtn();
 $('hsBack').onclick=()=>{$('hs').classList.add('hide');$('start').classList.remove('hide')};
 $('shareClose').onclick=()=>$('share').classList.add('hide');
@@ -499,7 +516,35 @@ async function fbFetch(){
   for(const k in out){out[k].sort((a,b)=>b.c-a.c);out[k]=out[k].slice(0,5)}
   online=out;return out;
 }
-setTimeout(()=>{flushQueue().catch(()=>{})},2500);
+setTimeout(()=>{flushQueue().catch(()=>{});flushFb().catch(()=>{})},2500);
+
+/* ---- Feedback (Firestore-Sammlung "feedback", nur schreiben) ---- */
+const VERSION='v1.0';let fbType='bug';
+async function fbPostFeedback(e){
+  const body={fields:{type:{stringValue:e.type},text:{stringValue:e.text},name:{stringValue:e.name},version:{stringValue:e.version},
+    ctx:{stringValue:e.ctx},device:{stringValue:e.device},d:{stringValue:e.d},ts:{timestampValue:e.ts}}};
+  const r=await fetch(FB_BASE+'/feedback?key='+FB_KEY,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  if(!r.ok){const err=new Error('fb '+r.status);err.status=r.status;throw err}
+}
+async function flushFb(){const q=LS.get('hd_fbq',[]);if(!q.length)return;const rest=[];
+  for(const e of q){try{await fbPostFeedback(e)}catch(err){if(err.status!==400&&err.status!==403)rest.push(e)}}LS.set('hd_fbq',rest)}
+function fbCtx(){const st={intro:'Menü',play:'im Spiel',pause:'Pause',end:'Abschluss'}[state]||state;
+  return (state==='intro'?'':MODE_NAME[mode]+' L'+lvl+' · ')+st+(XMAS?' · X-Mas':'')}
+function fbDevice(){const u=navigator.userAgent;const os=/iPhone|iPad/.test(u)?'iOS':/Android/.test(u)?'Android':/Windows/.test(u)?'Windows':/Mac/.test(u)?'Mac':'?';
+  const br=/CriOS|Chrome/.test(u)?'Chrome':/Safari/.test(u)?'Safari':/Firefox|FxiOS/.test(u)?'Firefox':'?';
+  return (os+' · '+br+' · '+innerWidth+'×'+innerHeight+(matchMedia('(display-mode: standalone)').matches||navigator.standalone?' · App':'')).slice(0,120)}
+function setFbType(t){fbType=t;document.querySelectorAll('#fbTypes [data-ft]').forEach(b=>b.className='mid'+(b.dataset.ft===t?'':' gray'))}
+function openFb(){setFbType('bug');$('fbText').value='';$('fbCount').textContent='0 / 500';$('fbName').value=PNAME||'';$('fbStatus').textContent='';$('fbSend').disabled=false;$('fbOv').classList.remove('hide')}
+async function sendFb(){
+  const text=$('fbText').value.trim();if(!text){$('fbStatus').textContent='Bitte kurz beschreiben, worum es geht.';$('fbText').focus();return}
+  const now=new Date(),e={type:fbType,text:text.slice(0,500),name:$('fbName').value.trim().replace(/[<>]/g,'').slice(0,16),version:VERSION,ctx:fbCtx().slice(0,60),
+    device:fbDevice(),d:now.toLocaleString('de-DE',{dateStyle:'short',timeStyle:'short'}).slice(0,20),ts:now.toISOString()};
+  $('fbSend').disabled=true;$('fbStatus').textContent='Wird gesendet…';
+  try{await fbPostFeedback(e);$('fbStatus').textContent='Danke! Dein Feedback ist angekommen 🍻'}
+  catch(err){if(err.status===400||err.status===403){$('fbStatus').textContent='Senden nicht möglich (Fehler '+err.status+').';$('fbSend').disabled=false;return}
+    const q=LS.get('hd_fbq',[]);q.push(e);LS.set('hd_fbq',q.slice(-20));$('fbStatus').textContent='Gespeichert – wird gesendet, sobald du online bist. Danke! 🍻'}
+  setTimeout(()=>$('fbOv').classList.add('hide'),1600);
+}
 
 /* ---- Name ---- */
 let nameCb=null;
