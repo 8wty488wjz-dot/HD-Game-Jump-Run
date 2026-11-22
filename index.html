@@ -368,39 +368,47 @@ addEventListener('keyup',e=>{
   if(k==='ArrowRight'||k==='d'||k==='D')K.r=0;
   if(k===' '||k==='ArrowUp'||k==='w'||k==='W')K.j=0;
 });
+const BTNS=[];
+function releaseAll(){for(const b of BTNS){b.ids.clear();b.el.classList.remove('on')}K.l=K.r=K.j=0}
 function bindBtn(id,key){
-  const el=document.getElementById(id);
-  const ids=new Set();let t0=0;
+  const el=document.getElementById(id),ids=new Set();let t0=0;BTNS.push({el,ids,key});
   // Finger bleibt dem Knopf zugeordnet (Pointer-Capture), auch wenn er beim Drücken leicht verrutscht.
   // Sehr kurze Tipper auf ◀/▶ zählen mindestens 0,14 s, damit H-D sichtbar reagiert.
+  const rel=()=>{if(!ids.size){K[key]=0;el.classList.remove('on')}};
   const on=e=>{e.preventDefault();initAudio();try{el.setPointerCapture(e.pointerId)}catch(_){}
     ids.add(e.pointerId);if(key==='j'&&!K.j)jPress=1;K[key]=1;t0=performance.now();el.classList.add('on')};
   const off=e=>{if(!ids.has(e.pointerId))return;ids.delete(e.pointerId);if(ids.size)return;
-    const rel=()=>{if(!ids.size){K[key]=0;el.classList.remove('on')}},held=performance.now()-t0;
-    if(key!=='j'&&held<140)setTimeout(rel,140-held);else rel()};
+    const held=performance.now()-t0;if(key!=='j'&&held<140)setTimeout(rel,140-held);else rel()};
   el.addEventListener('pointerdown',on);
   ['pointerup','pointercancel','lostpointercapture'].forEach(t=>el.addEventListener(t,off));
+  // Sicherung: Loslassen wird auch erkannt, wenn das Ereignis woanders ankommt
+  addEventListener('pointerup',off,true);addEventListener('pointercancel',off,true);
 }
+// Sicherungen gegen "klebende" Tasten
+addEventListener('touchend',e=>{if(!e.touches||e.touches.length===0)releaseAll()},true);
+addEventListener('touchcancel',e=>{if(!e.touches||e.touches.length===0)releaseAll()},true);
+addEventListener('blur',releaseAll);addEventListener('pagehide',releaseAll);
+document.addEventListener('visibilitychange',()=>{if(document.hidden)releaseAll()});
 bindBtn('bl','l');bindBtn('br','r');bindBtn('bj','j');
 addEventListener('contextmenu',e=>e.preventDefault());
 
 const $=id=>document.getElementById(id);
 let mode='run',lvl=1;
 const MODES=['run','pool','jump'];
-function startGame(m,l){initAudio();if(AC&&AC.state==='suspended')AC.resume();mode=m||mode;lvl=l||1;dparts=[];
+function startGame(m,l){releaseAll();initAudio();if(AC&&AC.state==='suspended')AC.resume();mode=m||mode;lvl=l||1;dparts=[];
   if(mode==='pool')buildPool();else if(mode==='jump')buildJump();else buildLevel();
   for(const id of['start','end','hs','share'])$(id).classList.add('hide');
   if(touchDev)$('ctrls').classList.remove('hide');$('bj').style.display=mode==='run'?'flex':'none';$('ctrls').classList.toggle('split',mode!=='run');specialGot=0;
   for(const id of['pause'])$(id).classList.add('hide');$('pauseBtn').classList.remove('hide');
   state='play';resize();camY=GY+50-H;startMusic(0,'game');schedBurp()}
 function restart(){stopMusic();startGame(mode,lvl)}
-function pauseGame(){if(state!=='play')return;state='pause';stopMusic();K.l=K.r=K.j=0;$('ctrls').classList.add('hide');$('pauseBtn').classList.add('hide');
+function pauseGame(){if(state!=='play')return;state='pause';stopMusic();releaseAll();$('ctrls').classList.add('hide');$('pauseBtn').classList.add('hide');
   $('pauseInfo').textContent=MODE_ICON[mode]+' '+MODE_NAME[mode]+' · Level '+lvl;
   $('pLevels').innerHTML='';[1,2,3].forEach(l=>{const b=document.createElement('button');b.className='mid'+(l===lvl?' gray':' blue');b.textContent='Level '+l;b.onclick=()=>{$('pause').classList.add('hide');startGame(mode,l)};$('pLevels').appendChild(b)});
   $('pGames').innerHTML='';MODES.filter(m=>m!==mode).forEach(m=>{const b=document.createElement('button');b.className='mid blue';b.textContent=MODE_ICON[m]+' '+MODE_NAME[m];b.onclick=()=>{$('pause').classList.add('hide');startGame(m,1)};$('pGames').appendChild(b)});
   $('pause').classList.remove('hide')}
 function resumeGame(){if(state!=='pause')return;$('pause').classList.add('hide');state='play';if(touchDev)$('ctrls').classList.remove('hide');$('pauseBtn').classList.remove('hide');startMusic(0,'game')}
-function toMenu(){stopMusic();state='intro';resize();$('pause').classList.add('hide');$('pauseBtn').classList.add('hide');lvl=1;buildLevel();mode='run';state='intro';$('end').classList.add('hide');$('start').classList.remove('hide')}
+function toMenu(){stopMusic();releaseAll();state='intro';resize();$('pause').classList.add('hide');$('pauseBtn').classList.add('hide');lvl=1;buildLevel();mode='run';state='intro';$('end').classList.add('hide');$('start').classList.remove('hide')}
 $('mute').onclick=()=>{initAudio();muted=!muted;$('mute').textContent=muted?'🔇':'🔊';if(master)master.gain.value=muted?0:1;};
 document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>startGame(b.dataset.go,1));
 document.querySelectorAll('.lv').forEach(d=>{for(let i=1;i<=3;i++){const b=document.createElement('button');b.textContent='Level '+i;b.onclick=()=>startGame(d.dataset.m,i);d.appendChild(b)}});
@@ -555,7 +563,7 @@ function closeName(ok){$('nameOv').classList.add('hide');const cb=nameCb;nameCb=
 let shareText='',lastKey='',lastRes=null;
 function finish(head){
   if(mode==='jump')total=djTotal();
-  state='end';endT=0;stopMusic();$('ctrls').classList.add('hide');$('pauseBtn').classList.add('hide');$('toast').classList.remove('on');
+  state='end';endT=0;stopMusic();releaseAll();$('ctrls').classList.add('hide');$('pauseBtn').classList.add('hide');$('toast').classList.remove('on');
   const r=count/total;
   danceL=r>=0.9?4:r>=0.65?3:r>=0.4?2:r>=0.15?1:0;
   const msgs=['H-D ist leicht angeheitert und nimmt erstmal einen Schluck.','H-D ist gut drauf – Finger in die Luft!','Beide Arme hoch – H-D feiert richtig!','H-D tanzt wild und zeigt seine Muckis!','LEGENDÄR! H-D packt alle Moves aus.'];
