@@ -128,7 +128,7 @@ button.big:active{transform:translateY(3px);box-shadow:0 1px 0 #7a0d0d}
       <button class="mid blue" id="fbBtn">💬 Feedback</button>
     </div>
     <p class="small" id="hint">PC: ← → steuern · Leertaste / ↑ springen</p>
-    <p class="ver">v1.5</p>
+    <p class="ver">v1.6</p>
   </div>
 </div>
 
@@ -653,7 +653,7 @@ async function fbFetch(){
 setTimeout(()=>{flushQueue().catch(()=>{});flushFb().catch(()=>{})},2500);
 
 /* ---- Feedback (Firestore-Sammlung "feedback", nur schreiben) ---- */
-const VERSION='v1.5';let fbType='bug';
+const VERSION='v1.6';let fbType='bug';
 // Update-Hinweis: prüft im Hintergrund, ob online eine neuere Version liegt (nie mitten im Spiel)
 let newVer=null,updLater=0;
 async function checkUpdate(){if(location.protocol==='file:'||document.hidden)return;
@@ -1713,9 +1713,9 @@ let TR=null;
 const TR_LANE=1.7;
 const TR_ZONE_NAMES=['🏖️ Strand','⛰️ Alm','🌴 Schinkenstraße'];
 const trZone=d=>d>=2600?2:d>=900?1:0;
-const trTier=d=>d<300?0:d<900?1:d<2000?2:d<3200?3:4;
-const trSpeed=d=>Math.min(48,13+d*0.0088);
-const TR_GAP=[1.45,1.2,1.0,0.86,0.74];
+const trTier=d=>d<300?0:d<900?1:d<2000?2:d<3200?3:d<5000?4:5;
+const trSpeed=d=>d<5000?Math.min(48,13+d*0.0088):Math.min(54,48+(d-5000)*0.003);
+const TR_GAP=[1.45,1.2,1.0,0.86,0.74,0.66];
 function buildTrun(){
   TR={started:false,hint:{},t:0,dist:0,v:13,lane:0,lx:0,y:0,vy:0,slide:0,hearts:3,inv:0,objs:[],nextZ:34,cans:0,specDone:false,run:0,dead:0,sw:null,shake:0,
       heal:600,zone:0,zoneT:-9,drinkT:-9,nextDrink:16+Math.random()*8,dust:[],lastPat:'',best:LS.get('hd_trbest',0)};
@@ -1727,7 +1727,7 @@ function trPattern(z0){
   const rnd=a=>a[Math.floor(Math.random()*a.length)],sh=()=>[-1,0,1].sort(()=>Math.random()-.5);
   const O=(lane,k,z,ex)=>R.objs.push(Object.assign({lane,k,z,v:Math.floor(Math.random()*2),hit:0,zone,eimer:k==='low'&&Math.random()<0.12,puke:k==='block'&&zone===2&&tier>=2&&Math.random()<0.1},ex||{}));
   const cans=(lane,z,n,h)=>{for(let i=0;i<n;i++)R.objs.push({k:'can',lane,z:z+i*1.4,h:h||0.5,zone})};
-  const pool=[['single',4],['double',tier>=1?3:0],['hurdle',2],['limbo',tier>=1?2:0],['zig',tier>=2?3:0],['combo',tier>=2?2:0],['tunnel',tier>=2?2:0],['mover',zone===0?3:tier>=1?(zone===2?5:tier>=3?3:2):0],['gauntlet',tier>=4?2:0],['vehicle',zone===1&&tier>=1?4:0]];
+  const pool=[['single',tier>=5?2:4],['double',tier>=1?3:0],['hurdle',2],['limbo',tier>=1?2:0],['zig',tier>=5?4:tier>=2?3:0],['combo',tier>=2?2:0],['tunnel',tier>=2?2:0],['mover',zone===0?3:tier>=1?(zone===2?5:tier>=3?3:2):0],['gauntlet',tier>=5?4:tier>=4?2:0],['vehicle',zone===1&&tier>=1?4:0]];
   let sum=0;for(const p of pool)sum+=p[1];let r=Math.random()*sum,name='single';for(const p of pool){r-=p[1];if(r<=0){name=p[0];break}}
   if(name===R.lastPat&&name!=='single')name='single';R.lastPat=name;
   let len=0;
@@ -2163,7 +2163,7 @@ function drawTrun(){
   c.fillStyle='#fff';c.font='bold 18px "Trebuchet MS",sans-serif';c.textAlign='left';c.textBaseline='middle';c.fillText(Math.floor(R.dist)+' m',24,28);
   c.fillStyle='rgba(0,0,0,.35)';c.beginPath();c.roundRect(10,50,92,28,14);c.fill();drawCan(c,26,64,0.95);c.fillStyle='#fff';c.font='bold 15px "Trebuchet MS",sans-serif';c.fillText(R.cans,40,65);
   c.font='18px sans-serif';for(let i=0;i<3;i++){c.globalAlpha=i<R.hearts?1:0.25;c.fillText('🛟',14+i*24,94)}c.globalAlpha=1;
-  const tier=trTier(R.dist),lvlTxt=['locker','flott','schnell','heftig','ÜBEL'][tier];
+  const tier=trTier(R.dist),lvlTxt=['locker','flott','schnell','heftig','ÜBEL','WAHNSINN 🔥'][tier];
   c.font='bold 13px "Trebuchet MS",sans-serif';c.textAlign='center';const tt='Tempo: '+lvlTxt,tw=c.measureText(tt).width+22;c.fillStyle='rgba(0,0,0,.35)';c.beginPath();c.roundRect(W/2-tw/2,12,tw,26,13);c.fill();
   c.fillStyle=tier>=4?'#ff6b4a':'#ffcc33';c.fillText(tt,W/2,26);
   if(R.started&&R.t-R.zoneT<3.4){const a=Math.min(1,(3.4-(R.t-R.zoneT))*2,(R.t-R.zoneT)*1.5);c.globalAlpha=a;c.font='bold 26px "Trebuchet MS",sans-serif';c.lineWidth=5;c.strokeStyle=OL;c.strokeText(TR_ZONE_NAMES[zone],W/2,H*0.26);c.fillStyle='#ffe14d';c.fillText(TR_ZONE_NAMES[zone],W/2,H*0.26);c.globalAlpha=1}
