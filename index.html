@@ -149,7 +149,7 @@ button.big:active{transform:translateY(3px);box-shadow:0 1px 0 #7a0d0d}
       <button class="mid blue" id="fbBtn">💬 Feedback</button>
     </div>
     <p class="small" id="hint">PC: ← → steuern · Leertaste / ↑ springen</p>
-    <p class="ver">v1.8</p>
+    <p class="ver">v1.9</p>
   </div>
 </div>
 
@@ -709,7 +709,7 @@ const WHOW={'hat:straw':'Jump & Run: ein Level bis zur Bar schaffen','flops:pink
   'hat:tirol':'Fundstück – irgendwo spät auf der Alm (Horst Run)','glasses:shutter':'Fundstück – nur für Wahnsinnige (Horst Run, sehr weit)','glasses:aviator':'Fundstück – kurz vor der Himmels-Bar (Dosen-Hüpfer Level 3)','can:weizen':'Fundstück – versteckt in Jump & Run Level 3','flops:de':'Fundstück – treibt am Ende von Pool-Party Level 3 vorbei','can:mass':'Fundstück – hoch oben im Dosen-Hüpfer ∞',
   'hat:helmet':'Erfolg „Fassanstich“','glasses:pixel':'Erfolg „Spezialist“','hat:golden':'Erfolg „Durchgespielt“','flops:gold':'Erfolg „Dauergast“','can:gold':'Erfolg „Legende der Schinkenstraße“','hat:crown':'Platin-Erfolg „Bierkönig“ (alle Erfolge)'};
 const itemName=(cat,id)=>(WARD[cat][1].find(x=>x[0]===id)||[0,id])[1];
-let OWN=LS.get('hd_own',{}),ST=LS.get('hd_st',{}),ACV=LS.get('hd_acv',{}),NEWS=[];
+let OWN=LS.get('hd_own',{}),ST=LS.get('hd_st',{}),ACV=LS.get('hd_acv',{}),NEWS=[];if(ACV.t7000){delete ACV.t7000;LS.set('hd_acv',ACV)}
 const owned=(cat,id)=>id===DEF_EQ[cat]||!!OWN[cat+':'+id];
 const WARD_N=Object.values(WARD).reduce((a,w)=>a+w[1].length-1,0),ownN=()=>Object.keys(OWN).filter(k=>WARD[k.split(':')[0]]).length;
 function stat(k,n){ST[k]=(ST[k]||0)+(n??1);LS.set('hd_st',ST)}
@@ -725,8 +725,9 @@ const ACHS=[
   ['l100','🩹','Stehaufzwerg','Verliere insgesamt 100 Leben','s',()=>ST.lives,100],
   ['p50k','💰','Punktekönig','Erspiele insgesamt 50.000 Punkte','g',()=>ST.pts,50000],
   ['t2600','🌴','Ballermann-Tourist','Erreiche in Horst Run die Schinkenstraße (2.600 m)','b',()=>ST.trMax,2600],
-  ['t5000','🔥','Wahnsinn','Laufe in Horst Run 5.000 m','s',()=>ST.trMax,5000],
-  ['t7000','👑','Legende der Schinkenstraße','Laufe in Horst Run 7.000 m','g',()=>ST.trMax,7000,'can:gold'],
+  ['t5000','🔥','Wahnsinn','Erreiche in Horst Run die Stufe „WAHNSINN“ (5.000 m)','s',()=>ST.trMax,5000],
+  ['t6500','💀','Irre!','Erreiche in Horst Run die Stufe „IRRE“ (6.500 m)','g',()=>ST.trMax,6500],
+  ['t8500','👹','Legende der Schinkenstraße','Erreiche in Horst Run die ENDSTUFE (8.500 m)','g',()=>ST.trMax,8500,'can:gold'],
   ['h1000','☁️','Wolke 7','Erreiche im Dosen-Hüpfer ∞ 1.000 m Höhe','s',()=>ST.djMax,1000],
   ['h3000','🚀','Ab ins All','Erreiche im Dosen-Hüpfer ∞ 3.000 m Höhe','g',()=>ST.djMax,3000],
   ['spec','💎','Spezialist','Leere alle Spezial-Dosen','g',()=>Object.keys(achGet()).length,()=>ACH_TOTAL(),'glasses:pixel'],
@@ -779,7 +780,7 @@ async function fbFetch(){
 setTimeout(()=>{flushQueue().catch(()=>{});flushFb().catch(()=>{})},2500);
 
 /* ---- Feedback (Firestore-Sammlung "feedback", nur schreiben) ---- */
-const VERSION='v1.8';let fbType='bug';
+const VERSION='v1.9';let fbType='bug';
 // Update-Hinweis: prüft im Hintergrund, ob online eine neuere Version liegt (nie mitten im Spiel)
 let newVer=null,updLater=0;
 async function checkUpdate(){if(location.protocol==='file:'||document.hidden)return;
@@ -1973,9 +1974,9 @@ let TR=null;
 const TR_LANE=1.7;
 const TR_ZONE_NAMES=['🏖️ Strand','⛰️ Alm','🌴 Schinkenstraße'];
 const trZone=d=>d>=2600?2:d>=900?1:0;
-const trTier=d=>d<300?0:d<900?1:d<2000?2:d<3200?3:d<5000?4:5;
-const trSpeed=d=>d<5000?Math.min(48,13+d*0.0088):Math.min(54,48+(d-5000)*0.003);
-const TR_GAP=[1.45,1.2,1.0,0.86,0.74,0.66];
+const trTier=d=>d<300?0:d<900?1:d<2000?2:d<3200?3:d<5000?4:d<6500?5:d<8500?6:7;
+const trSpeed=d=>d<900?13+d*0.0088:d<5000?Math.min(48,13+d*0.0088+Math.min(1.5,(d-900)*0.002)):d<7000?Math.min(54,48+(d-5000)*0.003):Math.min(60,54+(d-7000)*0.002);
+const TR_GAP=[1.45,1.2,0.95,0.82,0.72,0.66,0.61,0.57];
 function buildTrun(){
   TR={started:false,hint:{},t:0,dist:0,v:13,lane:0,lx:0,y:0,vy:0,slide:0,hearts:3,inv:0,objs:[],nextZ:34,cans:0,specDone:false,run:0,dead:0,sw:null,shake:0,
       heal:600,zone:0,zoneT:-9,drinkT:-9,nextDrink:16+Math.random()*8,dust:[],lastPat:'',best:LS.get('hd_trbest',0)};
@@ -1987,7 +1988,7 @@ function trPattern(z0){
   const rnd=a=>a[Math.floor(Math.random()*a.length)],sh=()=>[-1,0,1].sort(()=>Math.random()-.5);
   const O=(lane,k,z,ex)=>R.objs.push(Object.assign({lane,k,z,v:Math.floor(Math.random()*2),hit:0,zone,eimer:k==='low'&&Math.random()<0.12,puke:k==='block'&&zone===2&&tier>=2&&Math.random()<0.1},ex||{}));
   const cans=(lane,z,n,h)=>{for(let i=0;i<n;i++)R.objs.push({k:'can',lane,z:z+i*1.4,h:h||0.5,zone})};
-  const pool=[['single',tier>=5?2:4],['double',tier>=1?3:0],['hurdle',2],['limbo',tier>=1?2:0],['zig',tier>=5?4:tier>=2?3:0],['combo',tier>=2?2:0],['tunnel',tier>=2?2:0],['mover',zone===0?3:tier>=1?(zone===2?5:tier>=3?3:2):0],['gauntlet',tier>=5?4:tier>=4?2:0],['vehicle',zone===1&&tier>=1?4:0]];
+  const pool=[['single',tier>=7?1:tier>=5?2:4],['double',tier>=1?3:0],['hurdle',2],['limbo',tier>=1?2:0],['zig',tier>=6?5:tier>=5?4:tier>=2?3:0],['combo',tier>=2?2:0],['tunnel',tier>=6?3:tier>=2?2:0],['mover',zone===0?3:tier>=1?(zone===2?5:tier>=3?3:2):0],['gauntlet',tier>=7?6:tier>=6?5:tier>=5?4:tier>=4?2:0],['vehicle',zone===1&&tier>=1?4:0]];
   let sum=0;for(const p of pool)sum+=p[1];let r=Math.random()*sum,name='single';for(const p of pool){r-=p[1];if(r<=0){name=p[0];break}}
   if(name===R.lastPat&&name!=='single')name='single';R.lastPat=name;
   let len=0;
@@ -2426,9 +2427,9 @@ function drawTrun(){
   c.fillStyle='#fff';c.font='bold 18px "Trebuchet MS",sans-serif';c.textAlign='left';c.textBaseline='middle';c.fillText(Math.floor(R.dist)+' m',24,28);
   c.fillStyle='rgba(0,0,0,.35)';c.beginPath();c.roundRect(10,50,92,28,14);c.fill();drawCan(c,26,64,0.95);c.fillStyle='#fff';c.font='bold 15px "Trebuchet MS",sans-serif';c.fillText(R.cans,40,65);
   c.font='18px sans-serif';for(let i=0;i<3;i++){c.globalAlpha=i<R.hearts?1:0.25;c.fillText('🛟',14+i*24,94)}c.globalAlpha=1;
-  const tier=trTier(R.dist),lvlTxt=['locker','flott','schnell','heftig','ÜBEL','WAHNSINN 🔥'][tier];
+  const tier=trTier(R.dist),lvlTxt=['locker','flott','schnell','heftig','ÜBEL','WAHNSINN 🔥','IRRE 💀','ENDSTUFE 👹'][tier];
   c.font='bold 13px "Trebuchet MS",sans-serif';c.textAlign='center';const tt='Tempo: '+lvlTxt,tw=c.measureText(tt).width+22;c.fillStyle='rgba(0,0,0,.35)';c.beginPath();c.roundRect(W/2-tw/2,12,tw,26,13);c.fill();
-  c.fillStyle=tier>=4?'#ff6b4a':'#ffcc33';c.fillText(tt,W/2,26);
+  c.fillStyle=tier>=7?'#ff3df0':tier>=6?'#ff3b3b':tier>=4?'#ff6b4a':'#ffcc33';c.fillText(tt,W/2,26);
   if(R.started&&R.t-R.zoneT<3.4){const a=Math.min(1,(3.4-(R.t-R.zoneT))*2,(R.t-R.zoneT)*1.5);c.globalAlpha=a;c.font='bold 26px "Trebuchet MS",sans-serif';c.lineWidth=5;c.strokeStyle=OL;c.strokeText(TR_ZONE_NAMES[zone],W/2,H*0.26);c.fillStyle='#ffe14d';c.fillText(TR_ZONE_NAMES[zone],W/2,H*0.26);c.globalAlpha=1}
   if(R.hintNow&&R.t-R.hintNow.t<2.2){const k=R.hintNow.k,a=Math.min(1,(2.2-(R.t-R.hintNow.t))*2);
     drawSwipe(c,W/2,H*0.62,k==='low'?'u':k==='high'?'d':'lr',k==='low'?'Hochwischen = springen':k==='high'?'Runterwischen = ducken':'Zur Seite wischen = Spur',a,1.2)}
