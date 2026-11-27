@@ -852,6 +852,7 @@ function finish(head){
   state='end';endT=0;stopMusic();releaseAll();$('ctrls').classList.add('hide');$('pauseBtn').classList.add('hide');$('toast').classList.remove('on');
   const r=count/total;
   danceL=r>=0.85?4:r>=0.62?3:r>=0.4?2:r>=0.15?1:0;
+  let stars=-1;if(mode==='burp'){stars=abStars(lvl,count,!!AB.winT);danceL=[0,2,3,4][stars]}
   if(mode==='trun'){const m=TR?TR.dist:0;danceL=m>=3200?4:m>=2000?3:m>=900?2:m>=300?1:0}
   if(djInfo){const m=djInfo.m;danceL=m>=2000?4:m>=1200?3:m>=600?2:m>=250?1:0}
   const MSG=[['H-D nippt an der Dose und wippt vorsichtig mit dem großen Zeh.','H-D sucht noch den Takt – und seine zweite Badelatsche.','Erstmal ankommen: H-D schunkelt im Energiesparmodus.'],
@@ -872,18 +873,18 @@ function finish(head){
     if(ok){ST.done=ST.done||{};ST.done[mode+lvl]=1;LS.set('hd_st',ST);giveItem({run:'hat:straw',pool:'flops:pink',jump:'glasses:heart',burp:'can:radler'}[mode])}
     checkAch();$('achTxt').textContent=!NEWS.length?'':NEWS.length<=2?'🎉 Neu: '+NEWS.join(' · '):'🎉 '+NEWS.length+' Neuheiten freigeschaltet – siehe 👕 H-D Style'}
   const res=addScore(key,count,total,specialGot);lastKey=key;lastRes=res;
-  $('endH').textContent=hd;$('scoreTxt').textContent=SB?MODE_NAME[mode]+' · Level '+lvl+': '+count+' Punkte (🍺 '+SB.cans+'/'+SB.tot+' · 📏 +'+SB.pb+(SB.gb?' · 🏁 +'+SB.gb:'')+(SB.lb?' · ❤️ +'+SB.lb:'')+')':mode==='trun'?'Horst Run: '+Math.floor(TR.dist)+' m + '+TR.cans+' 🍺 = '+count+' Punkte':djInfo?'Dosen-Hüpfer ∞: '+djInfo.m+' m + '+djInfo.c+' 🍺 = '+count+' Punkte':MODE_NAME[mode]+' · Level '+lvl+': '+count+' von '+total+UNIT(mode,lvl);
-  $('rateTxt').textContent=msgs[danceL]+(danceL<4?' (Mehr Punkte = mehr Party!)':'');
+  $('endH').textContent=hd;$('scoreTxt').textContent=stars>=0?'Angry Burps · Level '+lvl+': '+count+' Punkte  '+starTxt(stars):SB?MODE_NAME[mode]+' · Level '+lvl+': '+count+' Punkte (🍺 '+SB.cans+'/'+SB.tot+' · 📏 +'+SB.pb+(SB.gb?' · 🏁 +'+SB.gb:'')+(SB.lb?' · ❤️ +'+SB.lb:'')+')':mode==='trun'?'Horst Run: '+Math.floor(TR.dist)+' m + '+TR.cans+' 🍺 = '+count+' Punkte':djInfo?'Dosen-Hüpfer ∞: '+djInfo.m+' m + '+djInfo.c+' 🍺 = '+count+' Punkte':MODE_NAME[mode]+' · Level '+lvl+': '+count+' von '+total+UNIT(mode,lvl);
+  $('rateTxt').textContent=msgs[danceL]+(stars>=0?(stars<3?' (⭐⭐⭐ ab '+AB_STARS[lvl][1]+' Punkten)':''):(danceL<4?' (Mehr Punkte = mehr Party!)':''));
   $('recTxt').textContent=(res.isNew?'🏆 Neuer Rekord!':'🏆 Dein Rekord: '+res.best+' Punkte')+'  ·  '+(specialGot?'✨ Spezial-Dose geleert!':achGet()[key]?'✨ Spezial-Dose: schon geschafft':'✨ Spezial-Dose verpasst');
   $('onTxt').textContent='';
   const nb=$('nextBtn');nb.style.display=lvl<LEVELS[mode]?'inline-block':'none';nb.textContent='▶ '+LVL_TXT(mode,lvl+1);
-  shareText='🍺 H-D – '+MODE_NAME[mode]+(ENDL(mode,lvl)?' (Endlos)':', Level '+lvl)+'\n'+(PNAME||'Ich')+': '+(mode==='trun'?count+' Punkte ('+Math.floor(TR.dist)+' m)':djInfo?count+' Punkte ('+djInfo.m+' m hoch)':count+' von '+total+UNIT(mode,lvl))+(specialGot?' ✨':'')+(res.isNew?' 🏆 Neuer Rekord!':'')+'\nSchaffst du mehr? 👉 '+GAME_URL;
+  shareText='🍺 H-D – '+MODE_NAME[mode]+(ENDL(mode,lvl)?' (Endlos)':', Level '+lvl)+'\n'+(PNAME||'Ich')+': '+(stars>=0?count+' Punkte '+starTxt(stars):mode==='trun'?count+' Punkte ('+Math.floor(TR.dist)+' m)':djInfo?count+' Punkte ('+djInfo.m+' m hoch)':count+' von '+total+UNIT(mode,lvl))+(specialGot?' ✨':'')+(res.isNew?' 🏆 Neuer Rekord!':'')+'\nSchaffst du mehr? 👉 '+GAME_URL;
   $('end').classList.remove('hide');sfx.win();setTimeout(()=>{if(state==='end')startMusic(danceL,'dance')},600);
   const entry={game:mode,level:lvl,cans:count,total:Math.min(total,100000),special:!!specialGot,d:new Date().toLocaleDateString('de-DE')};
   const worth=(res.isNew||res.spNew)&&count>0;
-  const sm=mode,sl=lvl,sc=count,st=total,ssp=specialGot;
+  const sm=mode,sl=lvl,sc=count,st=total,ssp=specialGot,sst=stars;
   const go=()=>{if(worth&&PNAME){entry.name=PNAME;queueScore(entry)}
-    shareText='🍺 H-D – '+MODE_NAME[sm]+(ENDL(sm,sl)?' (Endlos)':', Level '+sl)+'\n'+(PNAME||'Ich')+': '+(ENDL(sm,sl)?sc+' Punkte':sc+' von '+st+UNIT(sm,sl))+(ssp?' ✨':'')+(res.isNew?' 🏆 Neuer Rekord!':'')+'\nSchaffst du mehr? 👉 '+GAME_URL;
+    shareText='🍺 H-D – '+MODE_NAME[sm]+(ENDL(sm,sl)?' (Endlos)':', Level '+sl)+'\n'+(PNAME||'Ich')+': '+(sst>=0?sc+' Punkte '+starTxt(sst):ENDL(sm,sl)?sc+' Punkte':sc+' von '+st+UNIT(sm,sl))+(ssp?' ✨':'')+(res.isNew?' 🏆 Neuer Rekord!':'')+'\nSchaffst du mehr? 👉 '+GAME_URL;
     $('onTxt').textContent='🌍 Bestenliste wird geladen…';
     flushQueue().catch(()=>{}).then(()=>fbFetch()).then(o=>{
       const list=o[key]||[],i=list.findIndex(e=>e.n===PNAME);
@@ -903,7 +904,7 @@ function renderHS(){
   html+='<p class="small">'+esc(hsStatus)+'</p>';
   for(const l of LVN(hsTab)){const k=hsTab+l,list=online?(online[k]||[]):(h[k]||[]).map(e=>({n:e.n||PNAME||'Ich',c:e.c,tot:e.tot,s:e.s,d:e.d}));
     html+='<h3>'+LVL_TXT(hsTab,l)+' '+(a[k]?'<span title="Spezial-Dose geleert">✨</span>':'<span style="opacity:.3">✨</span>')+'</h3>';
-    html+=list.length?'<ol>'+list.slice(0,5).map(e=>'<li'+(e.n===PNAME?' class="me"':'')+'><b>'+esc(e.n)+'</b> · '+e.c+UICON(hsTab,l)+(e.s?' ✨':'')+(hsTab==='jump'&&l===4&&e.tot?' <span class="small">('+e.tot+' m)</span>':!ENDL(hsTab,l)&&e.tot?' <span class="small">von '+e.tot+'</span>':'')+'</li>').join('')+'</ol>':'<p class="small">Noch keine Einträge.</p>'}
+    html+=list.length?'<ol>'+list.slice(0,5).map(e=>'<li'+(e.n===PNAME?' class="me"':'')+'><b>'+esc(e.n)+'</b> · '+e.c+UICON(hsTab,l)+(e.s?' ✨':'')+(hsTab==='jump'&&l===4&&e.tot?' <span class="small">('+e.tot+' m)</span>':hsTab==='burp'?' '+(e.c>=AB_STARS[l][1]?'⭐⭐⭐':e.c>=AB_STARS[l][0]?'⭐⭐':''):!ENDL(hsTab,l)&&e.tot?' <span class="small">von '+e.tot+'</span>':'')+'</li>').join('')+'</ol>':'<p class="small">Noch keine Einträge.</p>'}
   html+='<p class="small" style="margin-top:10px">✨ Spezial-Dosen gesammelt: <b>'+Object.keys(a).length+' / '+ACH_TOTAL()+'</b></p>';
   $('hsList').innerHTML=html;
   $('hsList').querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{hsTab=b.dataset.t;renderHS()});
@@ -1715,6 +1716,10 @@ function drawJump(){
 }
 
 /* ---------- Angry Burps (Wurfspiel à la Schleuder-Physik) ---------- */
+// Sterne-Schwellen (2★, 3★) – mit Test-Bot kalibriert: 3 Sterne schwer, aber machbar
+const AB_STARS={1:[12,16],2:[15,22],3:[20,29]};
+function abStars(l,pts,won){if(!won)return 0;const t=AB_STARS[l];return pts>=t[1]?3:pts>=t[0]?2:1}
+const starTxt=n=>'⭐'.repeat(n)+'☆'.repeat(3-n);
 const AB_W=1000,AB_H=460,AB_G=420,AB_GRAV=650,AB_O={x:132,y:AB_G-84};
 const MAT={crate:{hp:4,m:1.1},glass:{hp:1,m:0.7},plank:{hp:3,m:0.9},barrel:{hp:7,m:2},stone:{hp:10,m:2.6}};
 // Dosensorten (Munition) – Fähigkeit per Tipp im Flug
@@ -2497,7 +2502,7 @@ function drawHow(c){
   const info={run:['🍺 Dosen sammeln & ab zur Zwergen-Bar','❤️ 3 Leben – Treffer & Wasser kosten eins (1 Extra-Leben versteckt)','🦀🛢️🐦 Krabben, Fässer & Möwen von oben plattmachen'],
     pool:['⏱ Halte durch, bis die Zeit um ist','🌊 Strömungen & Strudel treiben dich ab','🛟 3 Leben – 🎈 Luftpumpe gibt eins zurück'],
     jump:lvl===4?['∞ Endlos: wie hoch kommst du?','🚁 Power-ups: Propeller, Jetpack, Trampolin','📏 Rekord-Linien zeigen, wen du überholst']:['🛏️ Von Luma zu Luma bis zur Himmels-Bar','🚁 Power-ups: Propeller, Jetpack, Trampolin','💨 Nicht runterfallen!'],
-    burp:['🎯 Alle Krabben & Möwen erwischen','🍺🍋🌾🪨💥 Jede Dose kann was anderes','⭐ Übrige Dosen = Bonuspunkte']}[m];
+    burp:['🎯 Alle Krabben & Möwen erwischen = ⭐','🍺🍋🌾🪨💥 Jede Dose kann was anderes','⭐⭐ ab '+AB_STARS[lvl][0]+' · ⭐⭐⭐ ab '+AB_STARS[lvl][1]+' Punkten (übrige Dosen = Bonus)']}[m];
   c.fillStyle='rgba(10,10,25,.62)';c.fillRect(0,0,W,H);
   const bw=Math.min(W-20,460),bh=Math.min(H-20,330),bx=W/2-bw/2,by=Math.max(10,H*0.5-bh/2);
   c.fillStyle='rgba(30,15,5,.92)';c.beginPath();c.roundRect(bx,by,bw,bh,18);c.fill();c.strokeStyle='#ffcc33';c.lineWidth=3;c.stroke();
