@@ -151,7 +151,7 @@ button.big:active{transform:translateY(3px);box-shadow:0 1px 0 #7a0d0d}
       <button class="mid blue" id="fbBtn">💬 Feedback</button>
     </div>
     <p class="small" id="hint">PC: ← → steuern · Leertaste / ↑ springen</p>
-    <p class="ver">v2.0</p>
+    <p class="ver">v2.0.1</p>
   </div>
 </div>
 
@@ -760,8 +760,8 @@ function checkAch(){let any=true;while(any){any=false;for(const a of ACHS){if(AC
 function updStyleCnt(){const e=$('styleCnt');if(e)e.textContent='🏆 '+Object.keys(ACV).length+'/'+ACHS.length+' · 👕 '+ownN()+'/'+WARD_N}
 function saveEq(){LS.set('hd_eq',EQ);EQD=EQ}
 // „Was ist neu“ – einmalig nach einem Update (nicht beim allerersten Start)
-function showNews(){const seen=LS.get('hd_seen',null),played=seen||ST.runs||Object.keys(loadHS()).length;if(seen===VERSION)return;LS.set('hd_seen',VERSION);if(!played)return;
-  $('newVer').textContent=VERSION;
+function showNews(){const VB=VERSION.replace(/^(v\d+\.\d+).*$/,'$1'),seen=LS.get('hd_seen',null),played=seen||ST.runs||Object.keys(loadHS()).length;if(seen&&seen.replace(/^(v\d+\.\d+).*$/,'$1')===VB)return;LS.set('hd_seen',VERSION);if(!played)return;
+  $('newVer').textContent=VB;
   $('newList').innerHTML=['👕 <b>H-D Style</b>: Mützen, Brillen, Flip-Flops &amp; Dosen freischalten – plus '+ACHS.length+' Erfolge','⚡ <b>Horst Run</b>: neue Stufen bis „LEGENDE“ ab 11.000 m','⬆️ <b>Dosen-Hüpfer</b>: neues Level ∞ Endlos mit Rekord-Linien','🍻 <b>Alle Spiele</b>: faire Punkte, neue Gegner &amp; Power-ups'].map(t=>'<li>'+t+'</li>').join('');
   $('newOv').classList.remove('hide')}
 setTimeout(()=>{$('newOk').onclick=()=>$('newOv').classList.add('hide');showNews()},600);
@@ -796,7 +796,7 @@ async function fbFetch(){
 setTimeout(()=>{flushQueue().catch(()=>{});flushFb().catch(()=>{})},2500);
 
 /* ---- Feedback (Firestore-Sammlung "feedback", nur schreiben) ---- */
-const VERSION='v2.0';let fbType='bug';
+const VERSION='v2.0.1';let fbType='bug';
 // Update-Hinweis: prüft im Hintergrund, ob online eine neuere Version liegt (nie mitten im Spiel)
 let newVer=null,updLater=0;
 async function checkUpdate(){if(location.protocol==='file:'||document.hidden)return;
