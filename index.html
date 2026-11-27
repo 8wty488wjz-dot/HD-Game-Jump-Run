@@ -67,6 +67,8 @@ button.big:active{transform:translateY(3px);box-shadow:0 1px 0 #7a0d0d}
 .ach.lock{opacity:.6}.ach .ai{font-size:24px;width:32px;text-align:center;flex:0 0 auto}.ach .at{font-size:20px;flex:0 0 auto}.ach .tx{flex:1;font-size:13px}
 .ach .bar{height:6px;background:rgba(255,255,255,.15);border-radius:3px;margin-top:4px;overflow:hidden}.ach .bar i{display:block;height:100%;background:#ffcc33}
 .ach .rw{font-size:11px;color:#9fffb0}
+#stStats{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin:4px 0 10px}#stStats div{background:rgba(255,204,51,.1);border:1px solid rgba(255,204,51,.35);border-radius:10px;padding:5px 6px;font-size:12px;text-align:left}#stStats b{display:block;font-size:16px;color:#ffe14d}
+#newList li{margin:6px 0}
 #achBar{position:fixed;top:-120px;left:50%;transform:translateX(-50%);z-index:70;pointer-events:none;background:linear-gradient(90deg,#2a1a12,#4a2a12);color:#fff;border:2px solid #ffcc33;border-radius:16px;padding:8px 16px;font:bold 14px 'Trebuchet MS',sans-serif;text-align:center;box-shadow:0 6px 18px rgba(0,0,0,.45);transition:top .35s;max-width:88vw}
 #achBar.on{top:calc(8px + env(safe-area-inset-top))}#achBar span{font-weight:normal;font-size:12px;color:#ffe9a0}
 #updBar{white-space:nowrap;position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:60;display:flex;align-items:center;gap:8px;background:#2a1a12;color:#fff;border:2px solid #ffcc33;border-radius:16px;padding:8px 10px 8px 14px;font:bold 14px 'Trebuchet MS',sans-serif;box-shadow:0 4px 16px rgba(0,0,0,.4);max-width:calc(100vw - 20px)}
@@ -149,7 +151,7 @@ button.big:active{transform:translateY(3px);box-shadow:0 1px 0 #7a0d0d}
       <button class="mid blue" id="fbBtn">💬 Feedback</button>
     </div>
     <p class="small" id="hint">PC: ← → steuern · Leertaste / ↑ springen</p>
-    <p class="ver">v1.9</p>
+    <p class="ver">v2.0</p>
   </div>
 </div>
 
@@ -170,8 +172,13 @@ button.big:active{transform:translateY(3px);box-shadow:0 1px 0 #7a0d0d}
   <div class="box wide"><h1 style="font-size:26px">👕 H-D Style</h1>
     <div id="stTabs"><button class="mid" data-st="w">👕 Garderobe</button><button class="mid gray" data-st="a">🏆 Erfolge</button></div>
     <div id="stW"><div id="stPv"><canvas id="stCv"></canvas><button id="stTurn" aria-label="Umdrehen">↻</button></div><p class="small" id="stInfo">Tippe ein Teil an, um H-D damit auszustatten.</p><div id="stCats"></div></div>
-    <div id="stA" style="display:none"><p id="stSum" style="font-weight:bold;color:#ffd27a"></p><div id="stList"></div></div>
+    <div id="stA" style="display:none"><p id="stSum" style="font-weight:bold;color:#ffd27a"></p><div id="stStats"></div><div id="stList"></div></div>
     <button class="mid gray" id="stBack" style="margin-top:10px">Zurück</button></div>
+</div>
+<div id="newOv" class="ov hide" style="background:rgba(0,0,0,.65);z-index:11">
+  <div class="box"><h1 style="font-size:26px">🎉 Neu in H-D <span id="newVer"></span></h1>
+    <ul id="newList" style="text-align:left;padding-left:4px;list-style:none;margin:8px 0;line-height:1.45;font-size:15px"></ul>
+    <button class="mid green" id="newOk">🍻 Prost, los geht's!</button></div>
 </div>
 <div id="toast"></div>
 <div id="achBar"></div>
@@ -530,7 +537,9 @@ function renderStyle(){
         b.onclick=()=>{if(own){EQ[cat]=id;saveEq();stMsg(cat==='can'?'🍺 H-D trinkt jetzt: '+nm+'!':'✅ '+nm+(cat==='flops'?' angezogen!':' aufgesetzt!'));renderStyle()}else stMsg('🔒 '+(WHOW[cat+':'+id]||'Noch geheim'))};
         row.appendChild(b)}
       d.appendChild(row);box.appendChild(d)}}
-  else{$('stSum').textContent='🏆 '+Object.keys(ACV).length+' / '+ACHS.length+' Erfolge  ·  👕 '+ownN()+' / '+WARD_N+' Teile';
+  else{const n=v=>(v||0).toLocaleString('de-DE');
+    $('stStats').innerHTML=[['🎮 Läufe',n(ST.runs)],['🍺 Dosen gesamt',n(ST.cans)],['⭐ Punkte gesamt',n(ST.pts)],['💔 Leben verloren',n(ST.lives)],['⚡ Horst Run Bestweite',n(ST.trMax)+' m'],['⬆️ Hüpfer ∞ Bestwert',n(ST.djMax)+' m'],['🏁 Level geschafft',Object.keys(ST.done||{}).length+' / 12'],['🕺 Legendäre Tänze',n(ST.legend)]].map(([a,b])=>'<div>'+a+'<b>'+b+'</b></div>').join('');
+    $('stSum').textContent='🏆 '+Object.keys(ACV).length+' / '+ACHS.length+' Erfolge  ·  👕 '+ownN()+' / '+WARD_N+' Teile';
     $('stList').innerHTML=ACHS.map(a=>{const got=!!ACV[a[0]],goal=achGoal(a),v=Math.min(goal,a[5]()||0),secret=a[9]&&!got;
       const rw=a[7]?'<div class="rw">🎁 '+esc(itemName(...a[7].split(':')))+'</div>':'';
       return '<div class="ach'+(got?'':' lock')+'"><span class="ai">'+(secret?'❓':a[1])+'</span><div class="tx"><b>'+esc(secret?'Geheimer Erfolg':a[2])+'</b><br>'+esc(a[3])+(got?'':'<div class="bar"><i style="width:'+Math.round(v/goal*100)+'%"></i></div><span class="small">'+v.toLocaleString('de-DE')+' / '+goal.toLocaleString('de-DE')+'</span>')+rw+'</div><span class="at">'+(got?TIER[a[4]]:'🔒')+'</span></div>'}).join('')}
@@ -683,7 +692,7 @@ function update(dt){
   parts=parts.filter(p=>p.life>0);
 
   const tx=clamp(P.x+P.w/2-W*0.35,0,WORLD-W);camX+=(tx-camX)*Math.min(1,dt*8);
-  const ctrlH=touchDev&&innerHeight>innerWidth?115/SC:0;let ty=GY+50+ctrlH-H;if(P.y-80<ty)ty=P.y-80;camY+=(ty-camY)*Math.min(1,dt*6);
+  const ctrlH=touchDev?(innerHeight>innerWidth?115:78)/SC:0;let ty=GY+50+ctrlH-H;if(P.y-80<ty)ty=P.y-80;camY+=(ty-camY)*Math.min(1,dt*6);
 
   if(P.x>FX+50&&P.on)finish();
 }
@@ -728,6 +737,7 @@ const ACHS=[
   ['t5000','🔥','Wahnsinn','Erreiche in Horst Run die Stufe „WAHNSINN“ (5.000 m)','s',()=>ST.trMax,5000],
   ['t6500','💀','Irre!','Erreiche in Horst Run die Stufe „IRRE“ (6.500 m)','g',()=>ST.trMax,6500],
   ['t8500','👹','Legende der Schinkenstraße','Erreiche in Horst Run die ENDSTUFE (8.500 m)','g',()=>ST.trMax,8500,'can:gold'],
+  ['t11000','🏆','Unsterblich','Erreiche in Horst Run die Stufe „LEGENDE“ (11.000 m)','g',()=>ST.trMax,11000],
   ['h1000','☁️','Wolke 7','Erreiche im Dosen-Hüpfer ∞ 1.000 m Höhe','s',()=>ST.djMax,1000],
   ['h3000','🚀','Ab ins All','Erreiche im Dosen-Hüpfer ∞ 3.000 m Höhe','g',()=>ST.djMax,3000],
   ['spec','💎','Spezialist','Leere alle Spezial-Dosen','g',()=>Object.keys(achGet()).length,()=>ACH_TOTAL(),'glasses:pixel'],
@@ -749,6 +759,12 @@ function checkAch(){let any=true;while(any){any=false;for(const a of ACHS){if(AC
   showBar(TIER[a[4]]+' <b>Erfolg freigeschaltet:</b> '+esc(a[2])+'<br><span>'+esc(a[3])+'</span>');if(a[7])giveItem(a[7])}}}updStyleCnt()}
 function updStyleCnt(){const e=$('styleCnt');if(e)e.textContent='🏆 '+Object.keys(ACV).length+'/'+ACHS.length+' · 👕 '+ownN()+'/'+WARD_N}
 function saveEq(){LS.set('hd_eq',EQ);EQD=EQ}
+// „Was ist neu“ – einmalig nach einem Update (nicht beim allerersten Start)
+function showNews(){const seen=LS.get('hd_seen',null),played=seen||ST.runs||Object.keys(loadHS()).length;if(seen===VERSION)return;LS.set('hd_seen',VERSION);if(!played)return;
+  $('newVer').textContent=VERSION;
+  $('newList').innerHTML=['👕 <b>H-D Style</b>: Mützen, Brillen, Flip-Flops &amp; Dosen freischalten – plus '+ACHS.length+' Erfolge','⚡ <b>Horst Run</b>: neue Stufen bis „LEGENDE“ ab 11.000 m','⬆️ <b>Dosen-Hüpfer</b>: neues Level ∞ Endlos mit Rekord-Linien','🍻 <b>Alle Spiele</b>: faire Punkte, neue Gegner &amp; Power-ups'].map(t=>'<li>'+t+'</li>').join('');
+  $('newOv').classList.remove('hide')}
+setTimeout(()=>{$('newOk').onclick=()=>$('newOv').classList.add('hide');showNews()},600);
 setTimeout(()=>{updStyleCnt();checkAch()},1200);
 
 /* ---- Online-Bestenliste (Firebase Firestore, REST) ---- */
@@ -780,7 +796,7 @@ async function fbFetch(){
 setTimeout(()=>{flushQueue().catch(()=>{});flushFb().catch(()=>{})},2500);
 
 /* ---- Feedback (Firestore-Sammlung "feedback", nur schreiben) ---- */
-const VERSION='v1.9';let fbType='bug';
+const VERSION='v2.0';let fbType='bug';
 // Update-Hinweis: prüft im Hintergrund, ob online eine neuere Version liegt (nie mitten im Spiel)
 let newVer=null,updLater=0;
 async function checkUpdate(){if(location.protocol==='file:'||document.hidden)return;
@@ -854,7 +870,7 @@ function finish(head){
     if(mode==='run'&&lvl===3&&ok&&!P.lost&&cans.every(k=>k.got))stat('perfect');
     stat('runs');stat('pts',count);stat('cans',cg);if(!ok)stat('fails');if(danceL===4)stat('legend');
     if(ok){ST.done=ST.done||{};ST.done[mode+lvl]=1;LS.set('hd_st',ST);giveItem({run:'hat:straw',pool:'flops:pink',jump:'glasses:heart',burp:'can:radler'}[mode])}
-    checkAch();$('achTxt').textContent=NEWS.length?'🎉 Neu freigeschaltet: '+NEWS.join(' · '):''}
+    checkAch();$('achTxt').textContent=!NEWS.length?'':NEWS.length<=2?'🎉 Neu: '+NEWS.join(' · '):'🎉 '+NEWS.length+' Neuheiten freigeschaltet – siehe 👕 H-D Style'}
   const res=addScore(key,count,total,specialGot);lastKey=key;lastRes=res;
   $('endH').textContent=hd;$('scoreTxt').textContent=SB?MODE_NAME[mode]+' · Level '+lvl+': '+count+' Punkte (🍺 '+SB.cans+'/'+SB.tot+' · 📏 +'+SB.pb+(SB.gb?' · 🏁 +'+SB.gb:'')+(SB.lb?' · ❤️ +'+SB.lb:'')+')':mode==='trun'?'Horst Run: '+Math.floor(TR.dist)+' m + '+TR.cans+' 🍺 = '+count+' Punkte':djInfo?'Dosen-Hüpfer ∞: '+djInfo.m+' m + '+djInfo.c+' 🍺 = '+count+' Punkte':MODE_NAME[mode]+' · Level '+lvl+': '+count+' von '+total+UNIT(mode,lvl);
   $('rateTxt').textContent=msgs[danceL]+(danceL<4?' (Mehr Punkte = mehr Party!)':'');
@@ -923,7 +939,11 @@ function flopFill(c,id,x,y,w,h){const f=FLOPS[id]||FLOPS.green;
   if(id==='gold'&&Math.sin(T*3+x)>0.7){c.fillStyle='#fff';c.beginPath();c.arc(x-w*0.4,y-h*0.3,1,0,7);c.fill()}}
 function flopStrap(c,id,draw){const f=FLOPS[id]||FLOPS.green;c.strokeStyle=f[1];c.lineWidth=2.8;draw();if(id==='de'){c.strokeStyle='#ffcc00';c.lineWidth=1.2;draw()}if(id==='surf'){c.strokeStyle='#1e90ff';c.lineWidth=1;draw()}}
 function sparkle(c,x,y,r){c.save();c.translate(x,y);c.fillStyle='#fff';c.beginPath();for(let i=0;i<8;i++){const a=i*Math.PI/4,rr=i%2?r*0.3:r;c.lineTo(Math.cos(a)*rr,Math.sin(a)*rr)}c.closePath();c.fill();c.restore()}
-function drawHeld(c,x,y,s,rot){const id=EQD.can;
+function drawHeld(c,x,y,s,rot,hx,hy){const id=EQD.can;
+  if(id==='mass'&&hx!==undefined){// Maßkrug am Henkel: Henkel liegt in der Faust, Krug zeigt nach außen
+    const k=s*1.15,ca=Math.cos(rot),sa=Math.sin(rot),cx=hx+ca*12*k-sa*(-1)*k,cy=hy+sa*12*k+ca*(-1)*k;
+    c.save();c.translate(cx,cy);c.rotate(rot);c.scale(-1,1);c.translate(-cx,-cy);drawHeld(c,cx,cy,s,0);c.restore();
+    c.beginPath();c.arc(hx,hy,4.6,0,7);fillStroke(c,SKIN,1.6);c.strokeStyle='rgba(120,60,40,.6)';c.lineWidth=0.8;for(const d of[-1.6,0,1.6]){const ox=-sa*d,oy=ca*d;line(c,hx+ox+ca*1.5,hy+oy+sa*1.5,hx+ox+ca*4,hy+oy+sa*4)}return}
   if(id==='radler'){drawCan(c,x,y,s,rot,'#8ad14a','#f5e050');c.save();c.translate(x,y);c.rotate(rot);c.scale(s,s);c.beginPath();c.arc(0,0,3.4,0,7);c.fillStyle='#fff6a0';c.fill();c.strokeStyle='#e0b800';c.lineWidth=0.9;c.stroke();
     c.lineWidth=0.6;for(let i=0;i<6;i++){const a=i*Math.PI/3;line(c,0,0,Math.cos(a)*2.8,Math.sin(a)*2.8)}c.restore();return}
   if(id==='gold'){const g=c.createRadialGradient(x,y,2*s,x,y,15*s);g.addColorStop(0,'rgba(255,230,120,.75)');g.addColorStop(1,'rgba(255,210,60,0)');c.fillStyle=g;c.beginPath();c.arc(x,y,15*s,0,7);c.fill();
@@ -1053,7 +1073,7 @@ function arm(c,side,a,p,bend=0){
   }
   for(const [w,col] of [[10.5,OL],[7.5,SKIN]]){c.lineWidth=w;c.strokeStyle=col;c.beginPath();c.moveTo(sx,sy);c.lineTo(ex1,ey1);c.lineTo(ex,ey);c.stroke()}
   c.beginPath();c.arc(ex,ey,5,0,7);fillStroke(c,SKIN,1.8);
-  if(p.can&&side===1){if(p.drink)drawHeld(c,ex-3,ey-3,0.9,-1.95);else drawHeld(c,ex+1,ey-7,0.9,0.15)}
+  if(p.can&&side===1){if(p.ammo){drawAmmo(c,p.ammo,ex+1,ey-7,0.9,0.15);return}if(p.drink)drawHeld(c,ex-3,ey-3,0.9,-1.95,ex,ey);else drawHeld(c,ex+1,ey-7,0.9,0.15,ex,ey)}
 }
 function gnome(x,y,s,p){
   const c=ctx,eqS=EQD;if(p.plain)EQD=DEF_EQ;c.save();c.translate(x,y);c.scale(s,s);c.translate(0,-(p.jump||0));
@@ -1523,7 +1543,7 @@ const DJ_CFG={1:{goal:4000,gapMin:55,gapMax:110,move:0,brk:0,gull:0,mv:50},
               3:{goal:8000,gapMin:95,gapMax:165,move:0.38,brk:0.25,gull:0.14,mv:115},
               4:{goal:Infinity,gapMin:60,gapMax:110,move:0.08,brk:0.06,gull:0.03,mv:60}};
 // Endlos: Schwierigkeit wächst mit der Höhe
-function djCf(y){const cf=DJ.cf;if(lvl!==4)return cf;const k=Math.min(1,-y/22000);return{goal:Infinity,gapMin:60+45*k,gapMax:110+62*k,move:0.08+0.34*k,brk:0.06+0.22*k,gull:0.03+0.13*k,mv:60+65*k}}
+function djCf(y){const cf=DJ.cf;if(lvl!==4)return cf;const k=Math.min(1,-y/22000),k2=clamp((-y-22000)/18000,0,1);return{goal:Infinity,gapMin:60+45*k+8*k2,gapMax:110+62*k+10*k2,move:0.08+0.34*k+0.12*k2,brk:0.06+0.22*k+0.08*k2,gull:0.03+0.13*k+0.07*k2,mv:60+65*k+30*k2}}
 function djSaveBest(){const b=LS.get('hd_djh',{});if(!b[lvl]||DJ.best>b[lvl]){b[lvl]=Math.floor(DJ.best);LS.set('hd_djh',b)}}
 const DJ_G=1500,DJ_V=-770,DJ_SPRING=-1250;
 function djCol(){const PW=Math.min(W,440);return{PW,ox:(W-PW)/2}}
@@ -1929,7 +1949,7 @@ function drawBurpGame(){
   const p=abPull(),hd=aiming&&p?abHand(p):null;
   const pose=hd?{face:1,armL:hd.a,bendL:0,armR:1.45,bendR:0.15,rot:hd.rot,mouth:0.4,legL:-0.35,legR:0.3}
     :justThrew?{face:1,armL:-1.9,bendL:0.3,armR:0.5,rot:0.1,mouth:1.1,legL:-0.1,legR:0.35}
-    :{face:1,armL:0.4,armR:0.9,bendR:0.6,can:A.phase==='aim'&&A.cans>0,mouth:0.9};
+    :{face:1,armL:0.4,armR:0.9,bendR:0.6,can:A.phase==='aim'&&A.cans>0,ammo:A.queue[0],mouth:0.9};
   gnome(90,AB_G-2,1.05,pose);
   drawBurp(102,AB_G-2-50*1.05-22);
   // Zielen
@@ -1974,9 +1994,9 @@ let TR=null;
 const TR_LANE=1.7;
 const TR_ZONE_NAMES=['🏖️ Strand','⛰️ Alm','🌴 Schinkenstraße'];
 const trZone=d=>d>=2600?2:d>=900?1:0;
-const trTier=d=>d<300?0:d<900?1:d<2000?2:d<3200?3:d<5000?4:d<6500?5:d<8500?6:7;
-const trSpeed=d=>d<900?13+d*0.0088:d<5000?Math.min(48,13+d*0.0088+Math.min(1.5,(d-900)*0.002)):d<7000?Math.min(54,48+(d-5000)*0.003):Math.min(60,54+(d-7000)*0.002);
-const TR_GAP=[1.45,1.2,0.95,0.82,0.72,0.66,0.61,0.57];
+const trTier=d=>d<300?0:d<900?1:d<2000?2:d<3200?3:d<5000?4:d<6500?5:d<8500?6:d<11000?7:8;
+const trSpeed=d=>d<900?13+d*0.0088:d<5000?Math.min(48,13+d*0.0088+Math.min(1.5,(d-900)*0.002)):d<7000?Math.min(54,48+(d-5000)*0.003):Math.min(d<11000?60:64,54+(d-7000)*0.002);
+const TR_GAP=[1.45,1.2,0.95,0.82,0.72,0.66,0.61,0.57,0.53];
 function buildTrun(){
   TR={started:false,hint:{},t:0,dist:0,v:13,lane:0,lx:0,y:0,vy:0,slide:0,hearts:3,inv:0,objs:[],nextZ:34,cans:0,specDone:false,run:0,dead:0,sw:null,shake:0,
       heal:600,zone:0,zoneT:-9,drinkT:-9,nextDrink:16+Math.random()*8,dust:[],lastPat:'',best:LS.get('hd_trbest',0)};
@@ -2078,6 +2098,7 @@ function gnomeBack(x,y,s,p){
   // Arme: links schwingt, rechts hält die Dose
   const arm=(side,a,bend,can,canRot)=>{const sx=side*14,sy=-45,ex=sx+side*Math.sin(a)*10,ey=sy+Math.cos(a)*10,ex2=ex+side*Math.sin(a+bend)*9,ey2=ey+Math.cos(a+bend)*9;
     for(const [w,col] of [[10.5,OL],[7.5,SKIN]]){c.lineWidth=w;c.strokeStyle=col;c.beginPath();c.moveTo(sx,sy);c.lineTo(ex,ey);c.lineTo(ex2,ey2);c.stroke()}
+    if(can&&EQD.can==='mass'){drawHeld(c,0,0,0.85,(canRot||0)-0.25,ex2,ey2);return}
     if(can)drawHeld(c,ex2+side*1,ey2-5,0.85,canRot||0);
     c.beginPath();c.arc(ex2,ey2,5,0,7);fillStroke(c,SKIN,1.8)};
   const kL=Math.sin(ph+Math.PI),kR=Math.sin(ph);
@@ -2427,9 +2448,9 @@ function drawTrun(){
   c.fillStyle='#fff';c.font='bold 18px "Trebuchet MS",sans-serif';c.textAlign='left';c.textBaseline='middle';c.fillText(Math.floor(R.dist)+' m',24,28);
   c.fillStyle='rgba(0,0,0,.35)';c.beginPath();c.roundRect(10,50,92,28,14);c.fill();drawCan(c,26,64,0.95);c.fillStyle='#fff';c.font='bold 15px "Trebuchet MS",sans-serif';c.fillText(R.cans,40,65);
   c.font='18px sans-serif';for(let i=0;i<3;i++){c.globalAlpha=i<R.hearts?1:0.25;c.fillText('🛟',14+i*24,94)}c.globalAlpha=1;
-  const tier=trTier(R.dist),lvlTxt=['locker','flott','schnell','heftig','ÜBEL','WAHNSINN 🔥','IRRE 💀','ENDSTUFE 👹'][tier];
+  const tier=trTier(R.dist),lvlTxt=['locker','flott','schnell','heftig','ÜBEL','WAHNSINN 🔥','IRRE 💀','ENDSTUFE 👹','LEGENDE 🏆'][tier];
   c.font='bold 13px "Trebuchet MS",sans-serif';c.textAlign='center';const tt='Tempo: '+lvlTxt,tw=c.measureText(tt).width+22;c.fillStyle='rgba(0,0,0,.35)';c.beginPath();c.roundRect(W/2-tw/2,12,tw,26,13);c.fill();
-  c.fillStyle=tier>=7?'#ff3df0':tier>=6?'#ff3b3b':tier>=4?'#ff6b4a':'#ffcc33';c.fillText(tt,W/2,26);
+  c.fillStyle=tier>=8?'#ffd700':tier>=7?'#ff3df0':tier>=6?'#ff3b3b':tier>=4?'#ff6b4a':'#ffcc33';c.fillText(tt,W/2,26);
   if(R.started&&R.t-R.zoneT<3.4){const a=Math.min(1,(3.4-(R.t-R.zoneT))*2,(R.t-R.zoneT)*1.5);c.globalAlpha=a;c.font='bold 26px "Trebuchet MS",sans-serif';c.lineWidth=5;c.strokeStyle=OL;c.strokeText(TR_ZONE_NAMES[zone],W/2,H*0.26);c.fillStyle='#ffe14d';c.fillText(TR_ZONE_NAMES[zone],W/2,H*0.26);c.globalAlpha=1}
   if(R.hintNow&&R.t-R.hintNow.t<2.2){const k=R.hintNow.k,a=Math.min(1,(2.2-(R.t-R.hintNow.t))*2);
     drawSwipe(c,W/2,H*0.62,k==='low'?'u':k==='high'?'d':'lr',k==='low'?'Hochwischen = springen':k==='high'?'Runterwischen = ducken':'Zur Seite wischen = Spur',a,1.2)}
