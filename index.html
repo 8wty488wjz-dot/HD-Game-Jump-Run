@@ -151,7 +151,7 @@ button.big:active{transform:translateY(3px);box-shadow:0 1px 0 #7a0d0d}
       <button class="mid blue" id="fbBtn">💬 Feedback</button>
     </div>
     <p class="small" id="hint">PC: ← → steuern · Leertaste / ↑ springen</p>
-    <p class="ver">v2.1.1</p>
+    <p class="ver">v2.2</p>
   </div>
 </div>
 
@@ -750,6 +750,7 @@ const ACHS=[
   ['t6500','💀','Irre!','Erreiche in Horst Run die Stufe „IRRE“ (6.500 m)','g',()=>ST.trMax,6500],
   ['t8500','👹','Legende der Schinkenstraße','Erreiche in Horst Run die ENDSTUFE (8.500 m)','g',()=>ST.trMax,8500,'can:gold'],
   ['t11000','🏆','Unsterblich','Erreiche in Horst Run die Stufe „LEGENDE“ (11.000 m)','g',()=>ST.trMax,11000],
+  ['g15000','👑','Göttlich','Erreiche in Horst Run die Stufe „GÖTTLICH“ (15.000 m)','g',()=>ST.trMax,15000],
   ['h1000','☁️','Wolke 7','Erreiche im Dosen-Hüpfer ∞ 1.000 m Höhe','s',()=>ST.djMax,1000],
   ['h3000','🚀','Ab ins All','Erreiche im Dosen-Hüpfer ∞ 3.000 m Höhe','g',()=>ST.djMax,3000],
   ['spec','💎','Spezialist','Leere alle Spezial-Dosen','g',()=>Object.keys(achGet()).length,()=>ACH_TOTAL(),'glasses:pixel'],
@@ -774,7 +775,7 @@ function saveEq(){LS.set('hd_eq',EQ);EQD=EQ}
 // „Was ist neu“ – einmalig nach einem Update (nicht beim allerersten Start)
 function showNews(){const VB=VERSION.replace(/^(v\d+\.\d+).*$/,'$1'),seen=LS.get('hd_seen',null),played=seen||ST.runs||Object.keys(loadHS()).length;if(seen&&seen.replace(/^(v\d+\.\d+).*$/,'$1')===VB)return;LS.set('hd_seen',VERSION);if(!played)return;
   $('newVer').textContent=VB;
-  $('newList').innerHTML=['🥨 <b>Horst Run</b>: neue Welt „Wiesn“ ab 7.500 m – mit Blasmusik!','🍺 <b>Neue Teile</b>: Trachtenhut &amp; Maßkrug auf der Wiesn, Goaßmaß im Dosen-Hüpfer ∞','👕 Wer den Maßkrug schon hatte, bekommt dafür das Goaßmaß','⭐ <b>Angry Burps</b>: jetzt mit 1–3 Sternen pro Level'].map(t=>'<li>'+t+'</li>').join('');
+  $('newList').innerHTML=['🥨 <b>Horst Run</b>: neue Welt „Wiesn“ ab 7.500 m – mit Blasmusik!','👑 Ab 11.000 m wird’s immer härter – neue Stufe „GÖTTLICH“ ab 15.000 m','🍺 <b>Neue Teile</b>: Trachtenhut, Maßkrug &amp; Goaßmaß','⭐ <b>Angry Burps</b>: 1–3 Sterne · 🏊 <b>Pool</b>: Flossen-Power-up erklärt'].map(t=>'<li>'+t+'</li>').join('');
   $('newOv').classList.remove('hide')}
 setTimeout(()=>{$('newOk').onclick=()=>$('newOv').classList.add('hide');showNews()},600);
 setTimeout(()=>{updStyleCnt();checkAch()},1200);
@@ -808,7 +809,7 @@ async function fbFetch(){
 setTimeout(()=>{flushQueue().catch(()=>{});flushFb().catch(()=>{})},2500);
 
 /* ---- Feedback (Firestore-Sammlung "feedback", nur schreiben) ---- */
-const VERSION='v2.1.1';let fbType='bug';
+const VERSION='v2.2';let fbType='bug';
 // Update-Hinweis: prüft im Hintergrund, ob online eine neuere Version liegt (nie mitten im Spiel)
 let newVer=null,updLater=0;
 async function checkUpdate(){if(location.protocol==='file:'||document.hidden)return;
@@ -1400,6 +1401,7 @@ function updatePool(dt){
   if(P2.capsize){P2.capsize+=dt;if(P2.capsize>1.6){total=Math.max(1,poolCans);finish('Gekentert! 🛟')}return}
   if(P2.t>=P2.dur){total=Math.max(1,poolCans);finish('Pool-Party überlebt! 🍻');return}
   P2.fins=Math.max(0,P2.fins-dt);const fb=P2.fins>0?1:0;
+  if(fb&&Math.random()<dt*30)parts.push({x:P2.x+(Math.random()-.5)*50,y:ringY()+18,vx:(Math.random()-.5)*30,vy:60+Math.random()*60,life:0.7,drop:1,bub:1});
   const dir=K.r-K.l;P2.vx+=dir*cf.acc*(fb?1.5:1)*dt;P2.vx*=Math.pow(dir?0.5:cf.drag,dt);
   // Strömungen & Strudel
   {const gy0=ringY();for(const o of P2.objs){
@@ -1454,7 +1456,7 @@ function updatePool(dt){
     else if(o.k==='spec'&&dx*dx+dy*dy<42*42){o.gone=1;gotSpecial();parts.push({x:o.x,y:o.y-24,vx:0,vy:-60,life:1,t:'✨ +1 ✨',col:'#fff4b0'})}
     else if((o.k==='pump'||o.k==='fins')&&dx*dx+dy*dy<40*40){o.gone=1;sfx.special();
       if(o.k==='pump'){P2.hearts=Math.min(3,P2.hearts+1);parts.push({x:o.x,y:o.y-20,vx:0,vy:-60,life:1,t:'+1 🛟 aufgepumpt!',col:'#9fffb0'})}
-      else{P2.fins=7;parts.push({x:o.x,y:o.y-20,vx:0,vy:-60,life:1,t:'🤿 Turbo-Flossen!',col:'#9fe8ff'})}}
+      else{P2.fins=7;parts.push({x:o.x,y:o.y-20,vx:0,vy:-60,life:1.6,t:'Turbo-Flossen! Schneller & stabil',col:'#9fe8ff'})}}
     else if(o.k==='can'&&dx*dx+dy*dy<38*38){o.gone=1;count++;sfx.can();parts.push({x:o.x,y:o.y-20,vx:0,vy:-60,life:0.9,t:'+1 🍺',col:'#ffe14d'})}
     else if((o.k==='duck'||o.k==='ball')&&(dx/44)**2+(dy/34)**2<1){
       if(o.k==='ball'){o.hit=1;o.vx=Math.sign(dx||1)*260;o.gone=1}else{o.gone=1;o.squish=1}
@@ -1464,6 +1466,12 @@ function updatePool(dt){
   }
   P2.objs=P2.objs.filter(o=>o.y<H+(o.k==='cur'?200:60)&&!(o.gone&&(o.k==='can'||o.k==='spec'||o.k==='pump'||o.k==='fins'||o.k==='item'))&&!(o.squish&&o.gone&&(o.sq=(o.sq||0)+dt)>0.4));
 }
+function drawFlippers(c,x,y,k){// Paar Schwimmflossen
+  c.save();c.translate(x,y);c.scale(k,k);c.lineJoin='round';
+  for(const sd of[-1,1]){c.save();c.translate(sd*7,0);c.rotate(sd*0.22);c.beginPath();c.moveTo(-4,-12);c.lineTo(4,-12);c.quadraticCurveTo(5,-4,9,8);c.quadraticCurveTo(0,13,-9,8);c.quadraticCurveTo(-5,-4,-4,-12);c.closePath();
+    c.fillStyle='#ffcc00';c.fill();c.strokeStyle=OL;c.lineWidth=1.8;c.stroke();c.strokeStyle='rgba(160,110,0,.7)';c.lineWidth=1.2;line(c,-3,-2,-5,8);line(c,0,-2,0,9);line(c,3,-2,5,8);
+    c.fillStyle='#222';c.beginPath();c.roundRect(-4.5,-13,9,6,2.5);c.fill();c.restore()}
+  c.restore()}
 function drawDuck(c,x,y){
   c.save();c.translate(x,y+Math.sin(T*3+x)*2);
   c.beginPath();c.ellipse(0,0,24,8,0,0,7);c.strokeStyle='rgba(255,255,255,.5)';c.lineWidth=2;c.stroke();
@@ -1533,7 +1541,7 @@ function drawPool(){
   c.fillStyle='rgba(0,0,0,.08)';
   for(const o of P2.objs){
     if(o.k==='pump'||o.k==='fins'){c.save();c.translate(o.x,o.y+Math.sin(T*3+o.ph)*3);c.fillStyle='rgba(255,255,255,.35)';c.beginPath();c.arc(0,0,22,0,7);c.fill();c.strokeStyle='#fff';c.lineWidth=2;c.stroke();
-      c.font='24px sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillText(o.k==='pump'?'🎈':'🤿',0,1);c.restore();continue}
+      if(o.k==='pump'){c.font='24px sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillText('🎈',0,1)}else drawFlippers(c,0,2,1);c.restore();continue}
     if(o.k==='can'&&!o.gone){c.beginPath();c.ellipse(o.x,o.y+8,14,4,0,0,7);c.strokeStyle='rgba(255,255,255,.5)';c.lineWidth=2;c.stroke();drawCan(c,o.x,o.y+Math.sin(T*3+o.ph)*2,1.5,0.5+Math.sin(T*2+o.ph)*0.2)}
     else if(o.k==='spec'&&!o.gone)drawSpecial(c,o.x,o.y,1.5);
     else if(o.k==='item'&&!o.gone)drawPickup(c,o.key,o.x,o.y,46);
@@ -1548,14 +1556,15 @@ function drawPool(){
   drawBurp(P2.x+10,ringY()+sink-48*1.25-22);
   c.textAlign='center';c.textBaseline='middle';
   for(const p of parts){c.globalAlpha=Math.min(1,p.life*2);
-    if(p.drop){c.fillStyle=p.beer?'#ffcc33':'#bfe8ff';c.beginPath();c.arc(p.x,p.y,3.2,0,7);c.fill()}
+    if(p.drop&&p.bub){c.strokeStyle='rgba(255,255,255,.85)';c.lineWidth=1.5;c.beginPath();c.arc(p.x,p.y,2.5+p.life*3,0,7);c.stroke()}
+    else if(p.drop){c.fillStyle=p.beer?'#ffcc33':'#bfe8ff';c.beginPath();c.arc(p.x,p.y,3.2,0,7);c.fill()}
     else{c.font='bold 17px "Trebuchet MS",sans-serif';c.lineWidth=3.5;c.strokeStyle=OL;c.strokeText(p.t,p.x,p.y);c.fillStyle=p.col;c.fillText(p.t,p.x,p.y)}}
   c.globalAlpha=1;
   // HUD
   c.fillStyle='rgba(0,0,0,.35)';c.beginPath();c.roundRect(40,10,128,34,17);c.fill();
   drawCan(c,60,27,1.1);c.fillStyle='#fff';c.font='bold 18px "Trebuchet MS",sans-serif';c.textAlign='left';c.fillText(count+' 🍺',76,28);drawLvl();
   c.font='20px sans-serif';for(let i=0;i<3;i++){c.globalAlpha=i<P2.hearts?1:0.25;c.fillText('🛟',44+i*26,62)}c.globalAlpha=1;
-  if(P2.fins>0){c.font='bold 15px "Trebuchet MS",sans-serif';c.fillStyle='#9fe8ff';c.fillText('🤿 '+Math.ceil(P2.fins)+' s',44,88)}
+  if(P2.fins>0){drawFlippers(c,54,86,0.62);c.font='bold 15px "Trebuchet MS",sans-serif';c.fillStyle='#9fe8ff';c.textAlign='left';c.fillText(Math.ceil(P2.fins)+' s',72,88)}
   const pr=clamp(P2.t/P2.dur,0,1);c.fillStyle='rgba(0,0,0,.35)';c.beginPath();c.roundRect(W-110/SC-10-BW(),18,BW(),12,6);c.fill();
   c.fillStyle='#ffcc33';c.beginPath();c.roundRect(W-110/SC-10-BW(),18,Math.max(12,BW()*(1-pr)),12,6);c.fill();
   c.font='bold 13px "Trebuchet MS",sans-serif';c.fillStyle='#fff';c.textAlign='right';c.fillText('⏱ '+Math.ceil(P2.dur-P2.t)+' s',W-110/SC-10,44);
@@ -2023,8 +2032,9 @@ let TR=null;
 const TR_LANE=1.7;
 const TR_ZONE_NAMES=['🏖️ Strand','⛰️ Alm','🌴 Schinkenstraße','🥨 Wiesn'];
 const trZone=d=>d>=7500?3:d>=2600?2:d>=900?1:0;
-const trTier=d=>d<300?0:d<900?1:d<2000?2:d<3200?3:d<5000?4:d<6500?5:d<8500?6:d<11000?7:8;
-const trSpeed=d=>d<900?13+d*0.0088:d<5000?Math.min(48,13+d*0.0088+Math.min(2,(d-900)*0.002)):d<7000?Math.min(54,48+(d-5000)*0.003):Math.min(d<11000?60:64,54+(d-7000)*0.002);
+const trTier=d=>d<300?0:d<900?1:d<2000?2:d<3200?3:d<5000?4:d<6500?5:d<8500?6:d<11000?7:d<15000?8:9;
+const trSpeed=d=>d<900?13+d*0.0088:d<5000?Math.min(48,13+d*0.0088+Math.min(2,(d-900)*0.002)):d<7000?Math.min(54,48+(d-5000)*0.003):d<11000?Math.min(60,54+(d-7000)*0.002):Math.min(70,62+(d-11000)*0.0015);
+const trGap=d=>{const t=trTier(d);return t<8?TR_GAP[t]:Math.max(0.47,0.53-Math.floor((d-11000)/1000)*0.012)};
 const TR_GAP=[1.45,1.2,0.92,0.80,0.72,0.66,0.61,0.57,0.53];
 function buildTrun(){
   TR={started:false,hint:{},t:0,dist:0,v:13,lane:0,lx:0,y:0,vy:0,slide:0,hearts:3,inv:0,objs:[],nextZ:34,cans:0,specDone:false,run:0,dead:0,sw:null,shake:0,
@@ -2055,8 +2065,8 @@ function trPattern(z0){
   else if(name==='chain'){const from=rnd([-1,1]);O(0,'chain',z0,{lx:from*TR_LANE/2,tx:-from*TR_LANE/2});cans(from>0?1:-1,z0-3,3);len=v*0.3}
   else if(name==='gauntlet'){const l=sh();O(l[0],'block',z0);O(l[1],'low',z0);O(l[2],'high',z0);const l2=sh();O(l2[0],'block',z0+v*0.85);O(l2[1],'block',z0+v*0.85);cans(l2[2],z0+v*0.85-1,3);len=v*0.85}
   {R.itemDone=R.itemDone||{};const it=R.dist>2150&&R.dist<2550&&!owned('hat','tirol')?'hat:tirol':R.dist>5300&&R.dist<7400&&!owned('glasses','shutter')?'glasses:shutter':R.dist>7550&&R.dist<8000&&!owned('can','mass')?'can:mass':R.dist>8200&&R.dist<8900&&!owned('hat','tracht')?'hat:tracht':null;
-    if(it&&!R.itemDone[it]&&(it==='can:mass'||Math.random()<0.5)){R.itemDone[it]=1;R.objs.push({k:'item',key:it,lane:rnd([-1,0,1]),z:z0+len+v*TR_GAP[tier]*0.5,h:1.2,zone})}}
-  if(!R.specDone&&R.dist>1200&&Math.random()<0.25){R.specDone=true;R.objs.push({k:'spec',lane:rnd([-1,0,1]),z:z0+len+v*TR_GAP[tier]*0.5,h:1.2,zone})}
+    if(it&&!R.itemDone[it]&&(it==='can:mass'||Math.random()<0.5)){R.itemDone[it]=1;R.objs.push({k:'item',key:it,lane:rnd([-1,0,1]),z:z0+len+v*trGap(R.dist)*0.5,h:1.2,zone})}}
+  if(!R.specDone&&R.dist>1200&&Math.random()<0.25){R.specDone=true;R.objs.push({k:'spec',lane:rnd([-1,0,1]),z:z0+len+v*trGap(R.dist)*0.5,h:1.2,zone})}
   return len;
 }
 function trAct(a){
@@ -2080,14 +2090,14 @@ function updateTrun(dt){
   R.lx+=(R.lane*TR_LANE-R.lx)*Math.min(1,dt*15);
   R.vy-=28*dt;R.y=Math.max(0,R.y+R.vy*dt);if(R.y<=0)R.vy=0;
   if(R.slide>0)R.slide-=dt;
-  if(R.dist>=R.heal){R.heal+=600;if(R.hearts<3){R.hearts++;trTxt('+1 🛟','#bfe3ff')}}
+  if(R.dist>=R.heal){R.heal+=R.dist>=11000?1000:600;if(R.hearts<3){R.hearts++;trTxt('+1 ❤️','#ffb3c0')}}
   // ab und zu ein Schluck, wenn die Bahn gerade frei ist
   if(R.t>R.nextDrink&&R.y<=0&&R.slide<=0&&!R.objs.some(o=>o.z>0&&o.z<R.v*1.6&&!o.got&&o.k!=='can')){R.drinkT=R.t;R.nextDrink=R.t+20+Math.random()*16}
   for(const o of R.objs){o.pz=o.z;o.z-=dz+(o.k==='ball'?(4+trTier(R.dist))*dt:0)+(o.k==='vehicle'?o.vz*dt:0);
     if(o.k==='mover'){if(o.z<R.v*1.7)o.lx+=(o.to*TR_LANE-o.lx)*Math.min(1,dt*3.6);o.lane=Math.round(o.lx/TR_LANE)}
     if(o.k==='chain'&&o.z<R.v*2.8)o.lx+=(o.tx-o.lx)*Math.min(1,dt*4)}
   R.nextZ-=dz;
-  while(R.nextZ<=70){const len=trPattern(R.nextZ);R.nextZ+=len+R.v*TR_GAP[trTier(R.dist)]}
+  while(R.nextZ<=70){const len=trPattern(R.nextZ);R.nextZ+=len+R.v*trGap(R.dist)}
   for(const o of R.objs){
     if(o.z<16&&o.z>6&&!R.hint[o.k]&&['low','high','block'].includes(o.k)&&Math.abs((o.lx??o.lane*TR_LANE)-R.lx)<0.9){R.hint[o.k]=1;R.hintNow={k:o.k,t:R.t}}
     if(o.hit||o.got||!(o.z<=0.2&&o.pz>0.2))continue;
@@ -2095,7 +2105,7 @@ function updateTrun(dt){
     if(o.k==='can'||o.k==='spec'||o.k==='item'){if(Math.abs((o.h||0.5)-(R.y+0.5))<0.95){o.got=1;if(o.k==='item')giveItem(o.key);else if(o.k==='spec')gotSpecial();else{R.cans++;sfx.can()}}continue}
     let hit=false;
     if(o.k==='low'||o.k==='ball')hit=R.y<0.75;else if(o.k==='high')hit=R.slide<=0;else hit=true;
-    if(hit&&R.inv<=0){o.hit=1;R.hearts--;if(R.firstHit==null)R.firstHit=R.dist;stat('lives');R.inv=1.3;R.shake=1;sfx.hurt();trTxt(R.hearts>0?'Autsch! −1 🛟':'Platsch!','#ff6b6b');if(R.hearts<=0){R.dead=0.001;sfx.splash()}}
+    if(hit&&R.inv<=0){o.hit=1;R.hearts--;if(R.firstHit==null)R.firstHit=R.dist;stat('lives');R.inv=1.3;R.shake=1;sfx.hurt();trTxt(R.hearts>0?'Autsch! −1 ❤️':'Autsch!','#ff6b6b');if(R.hearts<=0){R.dead=0.001;sfx.splash()}}
   }
   R.objs=R.objs.filter(o=>o.z>-2.5&&!(o.got&&o.z<0.5));
 }
@@ -2652,10 +2662,10 @@ function drawTrun(){
   c.fillStyle='rgba(0,0,0,.35)';c.beginPath();c.roundRect(10,10,128,34,17);c.fill();
   c.fillStyle='#fff';c.font='bold 18px "Trebuchet MS",sans-serif';c.textAlign='left';c.textBaseline='middle';c.fillText(Math.floor(R.dist)+' m',24,28);
   c.fillStyle='rgba(0,0,0,.35)';c.beginPath();c.roundRect(10,50,92,28,14);c.fill();drawCan(c,26,64,0.95);c.fillStyle='#fff';c.font='bold 15px "Trebuchet MS",sans-serif';c.fillText(R.cans,40,65);
-  c.font='18px sans-serif';for(let i=0;i<3;i++){c.globalAlpha=i<R.hearts?1:0.25;c.fillText('🛟',14+i*24,94)}c.globalAlpha=1;
-  const tier=trTier(R.dist),lvlTxt=['locker','flott','schnell','heftig','ÜBEL','WAHNSINN 🔥','IRRE 💀','ENDSTUFE 👹','LEGENDE 🏆'][tier];
+  for(let i=0;i<3;i++)drawHeart(c,24+i*24,92,i<R.hearts,1.05);
+  const tier=trTier(R.dist),lvlTxt=['locker','flott','schnell','heftig','ÜBEL','WAHNSINN 🔥','IRRE 💀','ENDSTUFE 👹','LEGENDE 🏆','GÖTTLICH 👑'][tier];
   c.font='bold 13px "Trebuchet MS",sans-serif';c.textAlign='center';const tt='Tempo: '+lvlTxt,tw=c.measureText(tt).width+22;c.fillStyle='rgba(0,0,0,.35)';c.beginPath();c.roundRect(W/2-tw/2,12,tw,26,13);c.fill();
-  c.fillStyle=tier>=8?'#ffd700':tier>=7?'#ff3df0':tier>=6?'#ff3b3b':tier>=4?'#ff6b4a':'#ffcc33';c.fillText(tt,W/2,26);
+  c.fillStyle=tier>=9?'#ffffff':tier>=8?'#ffd700':tier>=7?'#ff3df0':tier>=6?'#ff3b3b':tier>=4?'#ff6b4a':'#ffcc33';c.fillText(tt,W/2,26);
   if(R.started&&R.t-R.zoneT<3.4){const a=Math.min(1,(3.4-(R.t-R.zoneT))*2,(R.t-R.zoneT)*1.5);c.globalAlpha=a;c.font='bold 26px "Trebuchet MS",sans-serif';c.lineWidth=5;c.strokeStyle=OL;c.strokeText(TR_ZONE_NAMES[zone],W/2,H*0.26);c.fillStyle='#ffe14d';c.fillText(TR_ZONE_NAMES[zone],W/2,H*0.26);c.globalAlpha=1}
   if(R.hintNow&&R.t-R.hintNow.t<2.2){const k=R.hintNow.k,a=Math.min(1,(2.2-(R.t-R.hintNow.t))*2);
     drawSwipe(c,W/2,H*0.62,k==='low'?'u':k==='high'?'d':'lr',k==='low'?'Hochwischen = springen':k==='high'?'Runterwischen = ducken':'Zur Seite wischen = Spur',a,1.2)}
@@ -2670,7 +2680,7 @@ function trIntro(c){
   const g=Math.min(150,(bw-10)/3),sc=Math.min(1.15,(g-6)/140),yy=by+66+70*sc;
   drawSwipe(c,W/2-g,yy,'u','Springen',1,sc);drawSwipe(c,W/2,yy,'lr','Spur wechseln',1,sc);drawSwipe(c,W/2+g,yy,'d','Ducken',1,sc);
   c.fillStyle='#fff';c.font='15px "Trebuchet MS",sans-serif';const ly=yy+70*sc;
-  c.fillText('🍺 Dosen sammeln = Extrapunkte',W/2,ly,bw-20);c.fillText('🛟 3 Leben – alle 600 m gibt\'s eins zurück',W/2,ly+26,bw-20);
+  c.fillText('🍺 Dosen sammeln = Extrapunkte',W/2,ly,bw-20);c.fillText('❤️ 3 Leben – regelmäßig gibt\'s eins zurück',W/2,ly+26,bw-20);
   const pulse=1+Math.sin(T*4)*0.04;c.save();c.translate(W/2,Math.min(by+bh-44,ly+84));c.scale(pulse,pulse);c.fillStyle='#e02020';c.beginPath();c.roundRect(-120,-26,240,52,26);c.fill();c.strokeStyle='#fff';c.lineWidth=3;c.stroke();
   c.fillStyle='#fff';c.font='bold 21px "Trebuchet MS",sans-serif';c.fillText('👆 Tippen zum Starten',0,1);c.restore();
 }
@@ -2700,7 +2710,7 @@ function drawHow(c){
     jump:td?[['◀ ▶','Nach links / rechts','lr']]:[['← →','Nach links / rechts','lr']],
     burp:[['','Ziehen & loslassen = Werfen','drag'],['👆','Im Flug tippen = Spezial','press']]}[m];
   const info={run:['🍺 Dosen sammeln & ab zur Zwergen-Bar','❤️ 3 Leben – Treffer & Wasser kosten eins (1 Extra-Leben versteckt)','🦀🛢️🐦 Krabben, Fässer & Möwen von oben plattmachen'],
-    pool:['⏱ Halte durch, bis die Zeit um ist','🌊 Strömungen & Strudel treiben dich ab','🛟 3 Leben – 🎈 Luftpumpe gibt eins zurück'],
+    pool:['⏱ Halte durch, bis die Zeit um ist – 🛟 3 Leben','🌊 Strömungen & Strudel treiben dich ab','🎈 Luftpumpe = +1 Leben · Flossen = 7 s schneller & stabil'],
     jump:lvl===4?['∞ Endlos: wie hoch kommst du?','🚁 Power-ups: Propeller, Jetpack, Trampolin','📏 Rekord-Linien zeigen, wen du überholst']:['🛏️ Von Luma zu Luma bis zur Himmels-Bar','🚁 Power-ups: Propeller, Jetpack, Trampolin','💨 Nicht runterfallen!'],
     burp:['🎯 Alle Krabben & Möwen erwischen = ⭐','🍺🍋🌾🪨💥 Jede Dose kann was anderes','⭐⭐ ab '+AB_STARS[lvl][0]+' · ⭐⭐⭐ ab '+AB_STARS[lvl][1]+' Punkten (übrige Dosen = Bonus)']}[m];
   c.fillStyle='rgba(10,10,25,.62)';c.fillRect(0,0,W,H);
