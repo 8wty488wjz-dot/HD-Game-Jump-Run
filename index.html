@@ -151,7 +151,7 @@ button.big:active{transform:translateY(3px);box-shadow:0 1px 0 #7a0d0d}
       <button class="mid blue" id="fbBtn">💬 Feedback</button>
     </div>
     <p class="small" id="hint">PC: ← → steuern · Leertaste / ↑ springen</p>
-    <p class="ver">v2.1</p>
+    <p class="ver">v2.1.1</p>
   </div>
 </div>
 
@@ -808,7 +808,7 @@ async function fbFetch(){
 setTimeout(()=>{flushQueue().catch(()=>{});flushFb().catch(()=>{})},2500);
 
 /* ---- Feedback (Firestore-Sammlung "feedback", nur schreiben) ---- */
-const VERSION='v2.1';let fbType='bug';
+const VERSION='v2.1.1';let fbType='bug';
 // Update-Hinweis: prüft im Hintergrund, ob online eine neuere Version liegt (nie mitten im Spiel)
 let newVer=null,updLater=0;
 async function checkUpdate(){if(location.protocol==='file:'||document.hidden)return;
@@ -1098,7 +1098,7 @@ function arm(c,side,a,p,bend=0){
   }
   for(const [w,col] of [[10.5,OL],[7.5,SKIN]]){c.lineWidth=w;c.strokeStyle=col;c.beginPath();c.moveTo(sx,sy);c.lineTo(ex1,ey1);c.lineTo(ex,ey);c.stroke()}
   c.beginPath();c.arc(ex,ey,5,0,7);fillStroke(c,SKIN,1.8);
-  if(p.can&&side===1){if(p.ammo){drawAmmo(c,p.ammo,ex+1,ey-7,0.9,0.15);return}if(p.drink)drawHeld(c,ex-3,ey-3,0.9,-1.95,ex,ey);else drawHeld(c,ex+1,ey-7,0.9,0.15,ex,ey)}
+  if(p.can&&side===1){if(p.ammo){drawAmmo(c,p.ammo,ex+1,ey-7,0.9,0.15);return}if(p.drink){if(EQD.can==='mass'||EQD.can==='goass'){const r=-1.1;drawHeld(c,ex-Math.cos(r)*11.3,ey-Math.sin(r)*11.3,0.82,r);c.beginPath();c.arc(ex,ey,4.6,0,7);fillStroke(c,SKIN,1.6)}else drawHeld(c,ex-3,ey-3,0.9,-1.95)}else drawHeld(c,ex+1,ey-7,0.9,0.15,ex,ey)}
 }
 function gnome(x,y,s,p){
   const c=ctx,eqS=EQD;if(p.plain)EQD=DEF_EQ;c.save();c.translate(x,y);c.scale(s,s);c.translate(0,-(p.jump||0));
@@ -1294,7 +1294,7 @@ function danceParams(t,L){
     moonwalk(){p.can=false;const cyc=(t*0.32)%1,go=cyc<0.5,u=go?cyc*2:(cyc-0.5)*2;p.face=go?1:-1;p.dx=go?28-56*u:-28+56*u;
       const st=Math.sin(t*9);p.legL=st>0?0.32:-0.05;p.legR=st>0?0.05:-0.32;p.armL=0.5+st*0.25;p.armR=0.5-st*0.25;p.bendR=0.6;p.jump=1;p.rot=0.04},
     headspin(){p.can=false;p.rot=Math.PI;p.jump=18;p.face=Math.sin(t*22)>0?1:-1;p.armL=1.65;p.armR=1.65;p.legL=-0.55+Math.sin(t*11)*0.15;p.legR=0.55-Math.sin(t*11)*0.15;p.mouth=1.2;p.hat=0},
-    drink(){p.drink=1;p.armR=2.73;p.bendR=1.98;p.armL=0.35+Math.sin(t*2)*0.1;p.mouth=0.5;p.rot=-0.06;p.jump=0;p.gulp=1}
+    drink(){const mug=EQD.can==='mass'||EQD.can==='goass';p.drink=1;p.armR=mug?2.4:2.73;p.bendR=mug?0.74:1.98;p.armL=0.35+Math.sin(t*2)*0.1;p.mouth=0.5;p.rot=-0.06;p.jump=0;p.gulp=1}
   };
   const SEQ=[['sway','drink','sway','drink'],
              ['sway','wave','robot','drink','point'],
@@ -2129,7 +2129,7 @@ function gnomeBack(x,y,s,p){
   // Arme: links schwingt, rechts hält die Dose
   const arm=(side,a,bend,can,canRot)=>{const sx=side*14,sy=-45,ex=sx+side*Math.sin(a)*10,ey=sy+Math.cos(a)*10,ex2=ex+side*Math.sin(a+bend)*9,ey2=ey+Math.cos(a+bend)*9;
     for(const [w,col] of [[10.5,OL],[7.5,SKIN]]){c.lineWidth=w;c.strokeStyle=col;c.beginPath();c.moveTo(sx,sy);c.lineTo(ex,ey);c.lineTo(ex2,ey2);c.stroke()}
-    if(can&&(EQD.can==='mass'||EQD.can==='goass')){drawHeld(c,0,0,0.85,(canRot||0)-0.25,ex2,ey2);return}
+    if(can&&(EQD.can==='mass'||EQD.can==='goass')){if(canRot<-1){c.beginPath();c.arc(ex2,ey2,5,0,7);fillStroke(c,SKIN,1.8);return}drawHeld(c,0,0,0.85,(canRot||0)-0.25,ex2,ey2);return}
     if(can)drawHeld(c,ex2+side*1,ey2-5,0.85,canRot||0);
     c.beginPath();c.arc(ex2,ey2,5,0,7);fillStroke(c,SKIN,1.8)};
   const kL=Math.sin(ph+Math.PI),kR=Math.sin(ph);
@@ -2139,6 +2139,7 @@ function gnomeBack(x,y,s,p){
   else{arm(-1,0.5+kL*0.55,0.9);arm(1,0.45+kR*0.35,1.2,true,0.2)}
   // Kopf (beim Ducken leicht eingezogen)
   c.translate(0,du*4);
+  if(p.drink&&!du&&(EQD.can==='mass'||EQD.can==='goass'))drawHeld(c,11,-66,0.85,-2.4);
   for(const side of[-1,1]){c.beginPath();c.moveTo(side*8,-52);c.quadraticCurveTo(side*14,-50,side*12.5,-45);c.quadraticCurveTo(side*10,-47.5,side*7,-48.5);c.closePath();fillStroke(c,'#fff',1.3)}
   for(const side of[-1,1]){c.beginPath();c.ellipse(side*12.4,-58,3.4,4.2,0,0,7);fillStroke(c,SKIN,1.5)}
   c.beginPath();c.arc(0,-59,12.2,0,7);fillStroke(c,SKIN);
